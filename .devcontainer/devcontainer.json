@@ -2,7 +2,7 @@
     "name": "Ubuntu Docker Image",
     "build": {
         "context": "..",
-        "dockerfile": "../Dockerfile",
+        "dockerfile": "Dockerfile",
         "options": [
             "--platform=linux/amd64"
         ]
@@ -17,8 +17,10 @@
         "vscode": {
             "extensions": [
                 "ms-vscode.cmake-tools",
-                "anysphere.cpptools",
-                "anysphere.cursorpyright"
+                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-extension-pack",
+                "ms-python.python",
+                "ms-python.debugpy"
             ]
         }
     },

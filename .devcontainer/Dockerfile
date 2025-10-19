@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN mkdir -p ${TOOLCHAIN_DIR} && \
     wget -qO- ${TOOLCHAIN_URL} | tar xJ --strip-components=1 -C ${TOOLCHAIN_DIR}
 
-RUN uv python install 3.12 && uv venv -p 3.12 ${VENV_DIR} && uv --directory ${VENV_DIR} pip install lxml
+RUN uv python install 3.14 && uv venv -p 3.14 ${VENV_DIR} && uv --directory ${VENV_DIR} pip install lxml
 ENV PATH=${TOOLCHAIN_DIR}/bin:${PATH}
 
 CMD ["bash"]
