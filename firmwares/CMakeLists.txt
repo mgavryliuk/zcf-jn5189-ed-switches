@@ -228,8 +228,9 @@ set(APP_SRC
     pdum_apdu.S
 
     ${APP_TARGET}/device_config.c
-    common/src/app_leds.c
+    # common/src/app_battery.c
     common/src/app_buttons.c
+    common/src/app_leds.c
     common/src/app_main.c
     common/src/app_resources.c
     common/src/app_wwdt.c
@@ -241,8 +242,9 @@ add_executable(${APP_TARGET} ${APP_SRC})
 target_compile_definitions(${APP_TARGET} PRIVATE
     DEBUG_APP_WWDT
     DEBUG_APP_MAIN
+    DEBUG_APP_BATTERY
     DEBUG_APP_BUTTONS
-    DEBUG_APP_LEDS
+    DEBUG_LEDS
     DEBUG_APP_RESOURCES
     DEBUG_APP_EVENTS
     DEBUG_APP_BUTTONS

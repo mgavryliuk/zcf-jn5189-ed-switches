@@ -11,6 +11,10 @@
 #include "fsl_power.h"
 #include "fsl_reset.h"
 
+#ifndef DEBUG_ENABLE
+#define DEBUG_ENABLE FALSE
+#endif
+
 #define UART_PIO_TX (8U)
 #define UART_PIO_RX (9U)
 #define UART_BAUD_RATE (115200U)
@@ -29,7 +33,7 @@ void hardware_init(void) {
         PWR_vColdStart();
     }
     APP_Buttons_Init();
-    APP_Leds_Init();
+    LEDS_Hardware_Init();
     APP_WWDT_Init();
 }
 
@@ -62,7 +66,9 @@ static void Clocks_Init(void) {
 }
 
 static void DBGConsole_Init(void) {
+#ifdef DBG_ENABLE
     IOCON_PinMuxSet(IOCON, 0, UART_PIO_TX, IOCON_FUNC2 | IOCON_MODE_INACT | IOCON_DIGITAL_EN);
     IOCON_PinMuxSet(IOCON, 0, UART_PIO_RX, IOCON_FUNC2 | IOCON_MODE_INACT | IOCON_DIGITAL_EN);
     DbgConsole_Init(0, UART_BAUD_RATE, kSerialPort_Uart, CLOCK_GetFreq(kCLOCK_Xtal32M));
+#endif
 }

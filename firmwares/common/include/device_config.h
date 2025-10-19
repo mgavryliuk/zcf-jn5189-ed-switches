@@ -3,6 +3,8 @@
 
 #include <jendefs.h>
 
+#include "app_leds.h"
+
 /* Maximum number of buttons supported by the firmware.
    This is defined at compile time to avoid dynamic memory allocation during
    execution */
@@ -13,6 +15,9 @@
 #ifndef MAX_BLINK_STATES
 #define MAX_BLINK_STATES (10)
 #endif
+
+extern LedConfig* const leds_configs[];
+extern ResetLedConfig reset_led_config;
 
 typedef struct {
     const uint32_t u32DioMask;
@@ -38,11 +43,8 @@ typedef struct {
     const uint8_t u8BasicEndpoint;
     const uint8_t u8ZdoEndpoint;
 
-    const tsControlMasks sControlMasks;
-    const tsResetButtonConfig sResetButtonConfig;
-
     const uint8_t u8EndpointButtonsCount;
-    const tsEndpointButtonConfig *psEndpointButtons;
+    const tsEndpointButtonConfig* psEndpointButtons;
 } tsDeviceConfig;
 
 extern const tsDeviceConfig sDeviceConfig;

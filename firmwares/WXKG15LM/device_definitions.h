@@ -11,11 +11,10 @@
 
 /* Led definitions */
 #define LED_LEFT_DIO (18)
-#define LED_LEFT_MASK (1UL << LED_LEFT_DIO)
 #define LED_RIGHT_DIO (19)
-#define LED_RIGHT_MASK (1UL << LED_RIGHT_DIO)
-#define LEDS_CTRL_MASK (LED_LEFT_MASK | LED_RIGHT_MASK)
+#define RESET_LED_MASK (1UL << LED_LEFT_DIO) | (1UL << LED_RIGHT_DIO)
 /* Led definitions - end */
 
+#define LEDS_AMOUNT 2
 
 #endif /* DEVICE_DEFINITIONS_H */

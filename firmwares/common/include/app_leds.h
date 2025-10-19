@@ -1,28 +1,35 @@
-#ifndef LEDS_H
-#define LEDS_H
+#ifndef APP_LED_H
+#define APP_LED_H
 
-#include <jendefs.h>
+#include <stdint.h>
 
-#include "ZTimer.h"
-
-#ifdef DEBUG_APP_LEDS
+#ifdef DEBUG_LEDS
 #define TRACE_LEDS TRUE
 #else
 #define TRACE_LEDS FALSE
 #endif
 
-#define LED_BLINK_INTERVAL ZTIMER_TIME_MSEC(100)
+#define LED_BLINK_INTERVAL ZTIMER_TIME_MSEC(1000)
+#define LED_CONTINOUS_BLINK_INTERVAL ZTIMER_TIME_MSEC(250)
+
+#define LEDS_TIMERS_AMOUN (1 + LEDS_AMOUNT)
 
 typedef struct {
-    uint32_t u32Mask;
-    uint8_t u8Cycles;
-    bool_t bIsOn;
-} ts_BlinkState;
+    const uint32_t u32DioPin;
+    uint8_t u8TimerID;
+} LedConfig;
 
-extern uint8_t u8TimerLedBlink;
+typedef struct {
+    const uint32_t u32Mask;
+    uint8_t u8TimerID;
+    uint8_t u8State;
+} ResetLedConfig;
 
-void APP_Leds_Init(void);
-void APP_Leds_Blink(uint32_t u32LedMask, uint8_t u8BlinkCount);
-void APP_Leds_cbTimerBlink(void *pvParam);
+void LEDS_Hardware_Init();
+void LEDS_Timers_Init();
+void LED_Blink(LedConfig* psConfig);
+void LED_TurnOff(LedConfig* psConfig);
+void LED_BlinkDuringSetup(void* pvParam);
+void LED_BlinkDuringSetup_Stop();
 
-#endif /* LEDS_H */
+#endif /* APP_LED_H */

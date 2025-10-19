@@ -11,20 +11,14 @@
 #include "app_resources.h"
 #include "dbg.h"
 #include "device_config.h"
+#include "device_definitions.h"
 #include "fsl_power.h"
 #include "fsl_wwdt.h"
 #include "pwrm.h"
 
-#ifdef DBG_ENABLE
-static uint32 logSleepAttempt = 0;
-#endif
-
 static void PreSleep(void);
 static void OnWakeUp(void);
 static void WakeCallBack(void);
-static uint8 getBlockingTimersAmount(void);
-static uint8 getNonBlockingTimersAmount(void);
-static void ManageSleepPrerequisites(void);
 static void EnterMainLoop(void);
 
 static PWR_tsWakeTimerEvent sWake;
@@ -37,12 +31,15 @@ void vAppRegisterPWRCallbacks(void) {
 void main_task(uint32_t parameter) {
     DBG_vPrintf(TRUE, "APP_MAIN: main_task called\n");
     APP_Resources_Init();
+    LEDS_Timers_Init();
 
     PDM_eInitialise(1200, 63, NULL);
+    DBG_vPrintf(TRUE, "APP_MAIN: PDM Init\n");
+
     PWR_ChangeDeepSleepMode(PWR_E_SLEEP_OSCON_RAMON);
     PWR_Init();
-
-    APP_Buttons_cbTimerScan(NULL);
+    DBG_vPrintf(TRUE, "APP_MAIN: PWR Init\n");
+    // APP_Buttons_cbTimerScan(NULL);
     EnterMainLoop();
 }
 
@@ -56,69 +53,31 @@ static void PreSleep(void) {
 static void OnWakeUp(void) {
     DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: On WakeUp called\n");
     ZTIMER_vWake();
-    if (POWER_GetIoWakeStatus() & sDeviceConfig.sControlMasks.u32DioMask) {
+    if (POWER_GetIoWakeStatus() & BTN_CTRL_MASK) {
         DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Button pressed: %08x\n", POWER_GetIoWakeStatus());
-        ZTIMER_eStart(u8TimerButtonScan, BUTTON_SCAN_TIME_MSEC);
+        // ZTIMER_eStart(u8TimerButtonScan, BUTTON_SCAN_TIME_MSEC);
     }
 }
 
-static void WakeCallBack(void) { DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Wake callback called\n"); }
-
-static uint8 getBlockingTimersAmount(void) {
-    uint8 u8NumberOfRunningTimers = 0;
-
-    if (ZTIMER_eGetState(u8TimerLedBlink) == E_ZTIMER_STATE_RUNNING) {
-        u8NumberOfRunningTimers++;
-    }
-
-    if (ZTIMER_eGetState(u8TimerButtonScan) == E_ZTIMER_STATE_RUNNING) {
-        u8NumberOfRunningTimers++;
-    }
-
-    return u8NumberOfRunningTimers;
-}
-
-static uint8 getNonBlockingTimersAmount(void) {
-    uint8 u8NumberOfRunningTimers = 0;
-    return u8NumberOfRunningTimers;
-}
-
-static void ManageSleepPrerequisites(void) {
-#ifdef DBG_ENABLE
-    logSleepAttempt++;
-    if (logSleepAttempt == 3200 * 10) {
-        DBG_vPrintf(TRUE, "APP MAIN: Activity Count = %d\n", PWRM_u16GetActivityCount());
-        DBG_vPrintf(TRUE, "APP MAIN: Task Timers = %d\n", getBlockingTimersAmount());
-        logSleepAttempt = 0;
-    }
-#endif
-
-    // if (ZTIMER_eGetState(u8TimerPoll) == E_ZTIMER_STATE_RUNNING) {
-    //     return;
-    // }
-
-    if ((PWRM_u16GetActivityCount() == getNonBlockingTimersAmount()) && (getBlockingTimersAmount() == 0)) {
-        DBG_vPrintf(TRUE, "APP MAIN: Activity Count = %d\n", PWRM_u16GetActivityCount());
-        DBG_vPrintf(TRUE, "APP MAIN: Task Timers = %d\n", getBlockingTimersAmount());
-
-        // PWRM_vInit(E_AHI_SLEEP_OSCON_RAMON);
-        DBG_vPrintf(TRACE_APP_MAIN,
-                    "APP_MAIN: Going to E_AHI_SLEEP_OSCON_RAMON sleep "
-                    "for %d seconds\n",
-                    MAXIMUM_TIME_TO_SLEEP_SEC);
-        PWR_vWakeUpConfig(sDeviceConfig.sControlMasks.u32DioMask);
-        PWR_teStatus eStatus = PWR_eRemoveActivity(&sWake);
-        DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eRemoveActivity status: %d\n", eStatus);
-        eStatus = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
-        DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eScheduleActivity status: %d\n", eStatus);
+static void WakeCallBack(void) {
+    DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Wake callback called\n");
+    for (uint8_t i = 0; i < LEDS_AMOUNT; i++) {
+        LED_Blink(leds_configs[i]);
     }
 }
 
 static void EnterMainLoop(void) {
+    PWR_vWakeUpConfig(BTN_CTRL_MASK);
+    for (uint8_t i = 0; i < LEDS_AMOUNT; i++) {
+        LED_Blink(leds_configs[i]);
+    }
     while (1) {
+        PWR_teStatus eStatus = PWR_eRemoveActivity(&sWake);
+        DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eRemoveActivity status: %d\n", eStatus);
+        eStatus = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
+        DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eScheduleActivity status: %d\n", eStatus);
         ZTIMER_vTask();
         WWDT_Refresh(WWDT);
-        ManageSleepPrerequisites();
         PWR_EnterLowPower();
     }
 }
