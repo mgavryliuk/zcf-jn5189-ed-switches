@@ -8,19 +8,19 @@
 #include "fsl_gpio.h"
 #include "fsl_iocon.h"
 
-static void LED_Hardware_Init(LedConfig* led_config);
+static void LED_Hardware_Init(LedConfig_t* led_config);
 static void LED_BlinkCallback(void* pvParam);
 
-void LEDS_Hardware_Init() {
+void LEDS_Hardware_Init(void) {
     for (uint8_t i = 0; i < device_config.u8LedsAmount; i++) {
         LED_Hardware_Init(device_config.psLedsConfigs[i]);
     }
 }
 
-void LEDS_Timers_Init() {
+void LEDS_Timers_Init(void) {
     DBG_vPrintf(TRACE_LEDS, "LEDS: Configuring Timers...\n");
     for (uint8_t i = 0; i < device_config.u8LedsAmount; i++) {
-        LedConfig* led = device_config.psLedsConfigs[i];
+        LedConfig_t* led = device_config.psLedsConfigs[i];
         ZTIMER_eOpen(&led->u8TimerID, LED_BlinkCallback, led, ZTIMER_FLAG_PREVENT_SLEEP);
         DBG_vPrintf(TRACE_LEDS, "LED(%u): Blink turn off Timer ID - %d\n", led->u32DioPin, led->u8TimerID);
     }
@@ -28,7 +28,7 @@ void LEDS_Timers_Init() {
     DBG_vPrintf(TRACE_LEDS, "LEDS: LEDS_Init finished. Blink during setup Timer ID - %d\n", device_config.sDeviceSetupLedsConfig.u8TimerID);
 }
 
-void LED_Blink(LedConfig* led_config) {
+void LED_Blink(LedConfig_t* led_config) {
     ZTIMER_teState state = ZTIMER_eGetState(device_config.sDeviceSetupLedsConfig.u8TimerID);
     if (state == E_ZTIMER_STATE_RUNNING) {
         DBG_vPrintf(TRACE_LEDS, "LEDS: Blink during setup in progress. Do nothing...");
@@ -42,7 +42,7 @@ void LED_Blink(LedConfig* led_config) {
     DBG_vPrintf(TRACE_LEDS, "LED(%u): Start turn off timer %d status: %d\n", led_config->u32DioPin, led_config->u8TimerID, status);
 }
 
-void LED_TurnOff(LedConfig* led_config) {
+void LED_TurnOff(LedConfig_t* led_config) {
     DBG_vPrintf(TRACE_LEDS, "LED(%u): Turn Off called\n", led_config->u32DioPin);
     GPIO_PortSet(GPIO, 0, 1U << led_config->u32DioPin);
 }
@@ -61,7 +61,7 @@ void LED_BlinkDuringSetup(void* pvParam) {
     }
 }
 
-void LED_BlinkDuringSetup_Stop() {
+void LED_BlinkDuringSetup_Stop(void) {
     DBG_vPrintf(TRACE_LEDS, "LEDS: Blink during setup. Stopping...\n");
     GPIO_PortSet(GPIO, 0, device_config.sDeviceSetupLedsConfig.u32Mask);
     device_config.sDeviceSetupLedsConfig.u8State = FALSE;
@@ -69,12 +69,12 @@ void LED_BlinkDuringSetup_Stop() {
 }
 
 void LED_ButtonBlinkCallback(void* ctx) {
-    LedConfig* led = (LedConfig*)ctx;
+    LedConfig_t* led = (LedConfig_t*)ctx;
     DBG_vPrintf(TRACE_LEDS, "LED(%u): Button blink callback called...\n", led->u32DioPin);
     LED_Blink(led);
 }
 
-static void LED_Hardware_Init(LedConfig* led_config) {
+static void LED_Hardware_Init(LedConfig_t* led_config) {
     DBG_vPrintf(TRACE_LEDS, "LED(%u): Configuring Hardware...\n", led_config->u32DioPin);
     gpio_pin_config_t led_pin_config = {
         .pinDirection = kGPIO_DigitalOutput,
@@ -87,7 +87,7 @@ static void LED_Hardware_Init(LedConfig* led_config) {
 }
 
 static void LED_BlinkCallback(void* pvParam) {
-    LedConfig* led_config = (LedConfig*)pvParam;
+    LedConfig_t* led_config = (LedConfig_t*)pvParam;
     DBG_vPrintf(TRACE_LEDS, "LED(%u): Blink turn off callback called\n", led_config->u32DioPin);
     LED_TurnOff(led_config);
 }

@@ -21,19 +21,20 @@ typedef struct {
     const uint8_t u8BasicEndpoint;
     const uint8_t u8ZdoEndpoint;
 
-    LedConfig* const* psLedsConfigs;
+    LedConfig_t* const* psLedsConfigs;
     const uint8_t u8LedsAmount;
 
-    DeviceSetupLedsConfig sDeviceSetupLedsConfig;
+    DeviceSetupLedsConfig_t sDeviceSetupLedsConfig;
 
-    Button* const* psButtons;
+    Button_t* const* psButtons;
+    uint8_t u8ButtonScanTimerID;
     const uint8_t u8ButtonsAmount;
 
     const uint32_t u32ButtonsInterruptMask;
 
-    ResetMaskConfig u32ResetMaskConfig;
-} DeviceConfig;
+    ResetMaskConfig_t u32ResetMaskConfig;
+} DeviceConfig_t;
 
-extern DeviceConfig device_config;
+extern DeviceConfig_t device_config;
 
 #endif /* DEVICE_CONFIG_H */

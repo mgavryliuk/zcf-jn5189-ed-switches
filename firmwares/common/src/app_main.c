@@ -31,7 +31,6 @@ void vAppRegisterPWRCallbacks(void) {
 void main_task(uint32_t parameter) {
     DBG_vPrintf(TRUE, "APP_MAIN: main_task called\n");
     APP_Resources_Init();
-    LEDS_Timers_Init();
 
     PDM_eInitialise(1200, 63, NULL);
     DBG_vPrintf(TRUE, "APP_MAIN: PDM Init\n");
@@ -39,7 +38,7 @@ void main_task(uint32_t parameter) {
     PWR_ChangeDeepSleepMode(PWR_E_SLEEP_OSCON_RAMON);
     PWR_Init();
     DBG_vPrintf(TRUE, "APP_MAIN: PWR Init\n");
-    // APP_Buttons_cbTimerScan(NULL);
+    ZTIMER_eStart(device_config.u8ButtonScanTimerID, BUTTON_SCAN_TIME_MSEC);
     EnterMainLoop();
 }
 
@@ -55,30 +54,24 @@ static void OnWakeUp(void) {
     ZTIMER_vWake();
     if (POWER_GetIoWakeStatus() & device_config.u32ButtonsInterruptMask) {
         DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Button pressed: %08x\n", POWER_GetIoWakeStatus());
-        // ZTIMER_eStart(u8TimerButtonScan, BUTTON_SCAN_TIME_MSEC);
+        ZTIMER_eStart(device_config.u8ButtonScanTimerID, BUTTON_SCAN_TIME_MSEC);
     }
 }
 
 static void WakeCallBack(void) {
     DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Wake callback called\n");
-    for (uint8_t i = 0; i < device_config.u8LedsAmount; i++) {
-        LED_Blink(device_config.psLedsConfigs[i]);
-    }
 }
 
 static void EnterMainLoop(void) {
-    PWR_vWakeUpConfig(device_config.u32ButtonsInterruptMask);
-    for (uint8_t i = 0; i < device_config.u8LedsAmount; i++) {
-        LED_Blink(device_config.psLedsConfigs[i]);
-    }
-    (void)BATTERY_GetStatus();
     while (1) {
-        // PWR_teStatus eStatus = PWR_eRemoveActivity(&sWake);
+        // TODO: make it later better
+        PWR_eRemoveActivity(&sWake);
         // DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eRemoveActivity status: %d\n", eStatus);
-        // eStatus = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
+        PWR_vWakeUpConfig(device_config.u32ButtonsInterruptMask);
+        PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
         // DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eScheduleActivity status: %d\n", eStatus);
         ZTIMER_vTask();
         WWDT_Refresh(WWDT);
-        // PWR_EnterLowPower();
+        PWR_EnterLowPower();
     }
 }

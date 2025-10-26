@@ -32,7 +32,7 @@ void hardware_init(void) {
         bWarmStart = TRUE;
         PWR_vColdStart();
     }
-    APP_Buttons_Init();
+    BUTTONS_Hardware_Init();
     LEDS_Hardware_Init();
     APP_WWDT_Init();
 }

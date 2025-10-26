@@ -4,7 +4,6 @@
 
 #include "ZQueue.h"
 #include "ZTimer.h"
-#include "app_buttons.h"
 #include "app_events.h"
 #include "dbg.h"
 
@@ -25,7 +24,8 @@ void APP_Resources_Init(void) {
 static void APP_vInitTimers(void) {
     DBG_vPrintf(TRACE_APP_RESOURCES, "APP_RESOURCES: APP_vInitTimers called. Timers amount: %d\n", APP_ZTIMER_STORAGE);
     ZTIMER_eInit(asTimers, sizeof(asTimers) / sizeof(ZTIMER_tsTimer));
-    // ZTIMER_eOpen(&u8TimerButtonScan, APP_Buttons_cbTimerScan, NULL, ZTIMER_FLAG_PREVENT_SLEEP);
+    LEDS_Timers_Init();
+    BUTTONS_Timers_Init();
     DBG_vPrintf(TRACE_APP_RESOURCES, "APP_RESOURCES: APP_vInitTimers finished\n");
 }
 

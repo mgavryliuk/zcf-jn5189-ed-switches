@@ -3,27 +3,28 @@
 
 #include <jendefs.h>
 
+#include "dbg.h"
+
 #ifdef DEBUG_BUTTONS
 #define TRACE_BUTTONS TRUE
 #else
 #define TRACE_BUTTONS FALSE
 #endif
 
-#ifndef RESET_DEVICE_CYCLES
-#define RESET_DEVICE_CYCLES 500  // 500 * BUTTON_SCAN_TIME_MSEC = 5 sec
-#endif
+#define BUTTON_DBG(...) DBG_vPrintf(TRACE_BUTTONS, "[Button] " __VA_ARGS__)
+#define BUTTONS_TIMERS_AMOUNT (1)
 
-#define BTN_DEBOUNCE_MASK 0b0111
-
+#define RESET_DEVICE_CYCLES (500)  // 500 * BUTTON_SCAN_TIME_MSEC = 5 sec
+#define BUTTON_DEBOUNCE_MASK (0b0111)
 #define BUTTON_SCAN_TIME_MSEC ZTIMER_TIME_MSEC(10)
 // 40 * BUTTON_SCAN_TIME_MSEC = 400ms
-#define BTN_REGISTER_WINDOW_CYCLES 40
+#define BTBUTTON_REGISTER_WINDOW_CYCLES (40)
 // 70 * BUTTON_SCAN_TIME_MSEC = 700ms
-#define BTN_LONG_PRESS_REGISTER_CYCLES 70
+#define BUTTON_LONG_PRESS_REGISTER_CYCLES (70)
 // 100 * BUTTON_SCAN_TIME_MSEC = 1sec
-#define BTN_IDLE_CYCLES_MAX 100
+#define BUTTON_IDLE_CYCLES_MAX (100)
 
-typedef void (*ButtonPressHandler)(void* ctx);
+typedef void (*ButtonPressHandler_cb_t)(void* ctx);
 
 typedef enum {
     IDLE = 0,
@@ -31,7 +32,7 @@ typedef enum {
     DOUBLE_CLICK,
     TRIPLE_CLICK,
     LONG_CLICK,
-} ButtonState;
+} ButtonState_t;
 
 typedef struct {
     // Zigbee endpoint
@@ -45,12 +46,12 @@ typedef struct {
     bool_t bPressed;
     uint16_t u16PressedCycles;
     uint8_t u8Debounce;
-    ButtonState eState;
+    ButtonState_t eState;
 
     // Press callback
-    ButtonPressHandler pfOnPressCallback;
+    ButtonPressHandler_cb_t pfOnPressCallback;
     void* pvOnPressContext;
-} Button;
+} Button_t;
 
 typedef struct {
     const uint32_t u32DioMask;
@@ -59,9 +60,10 @@ typedef struct {
     bool_t bPressed;
     uint16_t u16PressedCycles;
     uint8_t u8Debounce;
-} ResetMaskConfig;
+} ResetMaskConfig_t;
 
-void APP_Buttons_Init(void);
-void APP_Buttons_cbTimerScan(void* pvParam);
+void BUTTONS_Hardware_Init(void);
+void BUTTONS_Timers_Init(void);
+void BUTTONS_ScanCallback(void* pvParam);
 
 #endif /* APP_BUTTONS_H */

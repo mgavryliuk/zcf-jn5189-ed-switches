@@ -4,8 +4,8 @@
 #include <jendefs.h>
 
 #include "ZQueue.h"
+#include "app_buttons.h"
 #include "app_leds.h"
-#include "device_definitions.h"
 
 #ifdef DEBUG_APP_RESOURCES
 #define TRACE_APP_RESOURCES TRUE
@@ -13,7 +13,7 @@
 #define TRACE_APP_RESOURCES FALSE
 #endif
 
-#define APP_ZTIMER_STORAGE 1 + LEDS_TIMERS_AMOUNT
+#define APP_ZTIMER_STORAGE LEDS_TIMERS_AMOUNT + BUTTONS_TIMERS_AMOUNT
 #define APP_QUEUE_SIZE 10
 
 #define ZCL_TICK_TIME_MSEC ZTIMER_TIME_MSEC(1000)

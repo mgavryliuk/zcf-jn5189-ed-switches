@@ -3,98 +3,112 @@
 #include <jendefs.h>
 
 #include "ZTimer.h"
-#include "app_leds.h"
-#include "dbg.h"
 #include "device_config.h"
-#include "device_definitions.h"
 #include "fsl_gint.h"
 #include "fsl_gpio.h"
 #include "fsl_iocon.h"
 
-#define GINT0_POL_MASK (0)
-#define GINT0_ENA_MASK (BTN_CTRL_MASK)
+static void GINTCallback(void);
+static void HandleButtonState(Button_t* button, uint32_t dioState);
+static inline void ResetButtonsState(Button_t* button);
 
-// static void APP_GINT_cb(void);
-// static bool_t HandleButtonState(tsButtonState* sButtonState, uint32_t u32DIOState);
-// static void ResetButtonsState(tsButtonState* sButtonState);
-// static bool_t HandleResetButtonPressed(uint32_t u32DIOState);
+static uint8_t u16ButtonIdleCycles = 0;
 
-// uint8_t u8TimerButtonScan;
-// static uint16_t u16ButtonIdleCycles = 0;
-// static tsButtonState sResetButtonState = {
-//     .u.sResetBtnConfig = &sDeviceConfig.sResetButtonConfig,
-//     .bPressed = FALSE,
-//     .u16Cycles = 0,
-//     .u8Debounce = APP_BTN_DEBOUNCE_MASK,
-// };
-// static tsButtonState sButtonsTrackers[MAX_BUTTONS_COUNT];
-
-void APP_Buttons_Init(void) {
-    // DBG_vPrintf(TRACE_BUTTONS, "Buttons_Init\n");
-
-    // gpio_pin_config_t button_config = {
-    //     .pinDirection = kGPIO_DigitalInput,
-    // };
-    // uint8_t i = 0;
-    // for (; i < sDeviceConfig.u8EndpointButtonsCount; i++) {
-    //     DBG_vPrintf(TRACE_BUTTONS, "BUTTONS: Configuring Button pin: %d for LED %d\n", sDeviceConfig.psEndpointButtons[i].u32DioPin,
-    //                 sDeviceConfig.psEndpointButtons[i].u32LedPin);
-    //     IOCON_PinMuxSet(IOCON, 0, sDeviceConfig.psEndpointButtons[i].u32DioPin, IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN);
-
-    //     GPIO_PinInit(GPIO, 0, sDeviceConfig.psEndpointButtons[i].u32DioPin, &button_config);
-    // }
-
-    // DBG_vPrintf(TRACE_BUTTONS, "BUTTONS: Configuring GINT\n");
-    // GINT_Init(GINT0);
-    // GINT_SetCtrl(GINT0, kGINT_CombineOr, kGINT_TrigEdge, APP_GINT_cb);
-    // GINT_ConfigPins(GINT0, kGINT_Port0, GINT0_POL_MASK, GINT0_ENA_MASK);
-    // GINT_EnableCallback(GINT0);
-    // DBG_vPrintf(TRACE_BUTTONS, "BUTTONS: GINT configured. Buttons_Init done\n");
+void BUTTONS_Hardware_Init(void) {
+    BUTTON_DBG("Init hardware\n");
+    gpio_pin_config_t button_config = {
+        .pinDirection = kGPIO_DigitalInput,
+    };
+    uint8_t i = 0;
+    for (; i < device_config.u8ButtonsAmount; i++) {
+        BUTTON_DBG("Configuring button with pin: %d\n", device_config.psButtons[i]->u32DioPin);
+        IOCON_PinMuxSet(IOCON, 0, device_config.psButtons[i]->u32DioPin, IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN);
+        GPIO_PinInit(GPIO, 0, device_config.psButtons[i]->u32DioPin, &button_config);
+    }
+    BUTTON_DBG("Init hardware finished!\n");
+    BUTTON_DBG("Configuring GINT...\n");
+    GINT_Init(GINT0);
+    GINT_SetCtrl(GINT0, kGINT_CombineOr, kGINT_TrigEdge, GINTCallback);
+    GINT_ConfigPins(GINT0, kGINT_Port0, 0, device_config.u32ButtonsInterruptMask);
+    GINT_EnableCallback(GINT0);
+    BUTTON_DBG("GINT configured!\n");
 }
 
-// void APP_Buttons_cbTimerScan(void* pvParam) {
-//     GINT_DisableCallback(GINT0);
+void BUTTONS_Timers_Init(void) {
+    BUTTON_DBG("Init timers\n");
+    ZTIMER_eOpen(&device_config.u8ButtonScanTimerID, BUTTONS_ScanCallback, NULL, ZTIMER_FLAG_PREVENT_SLEEP);
+    BUTTON_DBG("Init timers finished!\n");
+}
 
-//     bool_t bAnyBtnPressed = FALSE;
-//     uint32_t u32DIOState = GPIO_PortRead(GPIO, 0) & sDeviceConfig.sControlMasks.u32DioMask;
+void BUTTONS_ScanCallback(void* pvParam) {
+    GINT_DisableCallback(GINT0);
+    uint8_t i;
+    bool_t bAnyBtnPressed = FALSE;
+    uint32_t u32DIOState = GPIO_PortRead(GPIO, 0) & device_config.u32ButtonsInterruptMask;
+    for (i = 0; i < device_config.u8ButtonsAmount; i++) {
+        HandleButtonState(device_config.psButtons[i], u32DIOState);
+        bAnyBtnPressed |= device_config.psButtons[i]->bPressed;
+    }
+    // bool_t bResetBtnPressed = HandleResetButtonPressed(u32DIOState);
+    bool_t bResetBtnPressed = FALSE;
 
-//     uint8_t i;
-//     for (i = 0; i < sDeviceConfig.u8EndpointButtonsCount; i++) {
-//         bAnyBtnPressed |= HandleButtonState(&sButtonsTrackers[i], u32DIOState);
-//     }
+    if (bAnyBtnPressed || bResetBtnPressed) {
+        u16ButtonIdleCycles = 0;
+    } else {
+        u16ButtonIdleCycles++;
+    }
 
-//     bool_t bResetBtnPressed = HandleResetButtonPressed(u32DIOState);
+    if (u16ButtonIdleCycles == BUTTON_IDLE_CYCLES_MAX) {
+        u16ButtonIdleCycles = 0;
+        BUTTON_DBG("IDLE cycles achieved. Stopping scan...\n");
+        GINT_EnableCallback(GINT0);
+        for (i = 0; i < device_config.u8ButtonsAmount; i++) {
+            // ResetButtonsState(&sButtonsTrackers[i]);
+        }
+        ZTIMER_eStop(device_config.u8ButtonScanTimerID);
+    } else {
+        ZTIMER_eStop(device_config.u8ButtonScanTimerID);
+        ZTIMER_eStart(device_config.u8ButtonScanTimerID, BUTTON_SCAN_TIME_MSEC);
+    }
+}
 
-//     if (bAnyBtnPressed || bResetBtnPressed) {
-//         u16ButtonIdleCycles = 0;
-//     } else {
-//         u16ButtonIdleCycles++;
-// #ifdef TRACE_BUTTONS
-//         if (u16ButtonIdleCycles % 50 == 0)
-//             DBG_vPrintf(TRACE_BUTTONS, "BUTTONS: IDLE cycle %d\n", u16ButtonIdleCycles);
-// #endif
-//     }
+static void GINTCallback(void) {
+    BUTTONS_ScanCallback(NULL);
+}
 
-//     if (u16ButtonIdleCycles == APP_BTN_IDLE_CYCLES_MAX) {
-//         u16ButtonIdleCycles = 0;
-//         DBG_vPrintf(TRACE_BUTTONS, "BUTTONS: Stopping scan\n");
-//         GINT_EnableCallback(GINT0);
-//         for (i = 0; i < sDeviceConfig.u8EndpointButtonsCount; i++) {
-//             ResetButtonsState(&sButtonsTrackers[i]);
-//         }
-//         ZTIMER_eStop(u8TimerButtonScan);
-//     } else {
-//         ZTIMER_eStop(u8TimerButtonScan);
-//         ZTIMER_eStart(u8TimerButtonScan, BUTTON_SCAN_TIME_MSEC);
-//     }
-// }
+static void HandleButtonState(Button_t* button, uint32_t dioState) {
+    button->u8Debounce <<= 1;
+    button->u8Debounce |= ((dioState & button->u32DioMask) ? 1 : 0);
+    button->u8Debounce &= BUTTON_DEBOUNCE_MASK;
 
-// static void APP_GINT_cb(void) {
-// DBG_vPrintf(TRACE_BUTTONS, "GINT_CALLBACK: GINT callback triggered!\n");
-// GINT_DisableCallback(GINT0);
-// ZTIMER_eStart(u8TimerButtonScan, BUTTON_SCAN_TIME_MSEC);
-// }
+    switch (button->u8Debounce) {
+        case 0:
+            if (!button->bPressed) {
+                BUTTON_DBG("Button with pin %d pressed. Endpoint: %d\n", button->u32DioPin, button->u16Endpoint);
+                button->bPressed = TRUE;
+                button->pfOnPressCallback(button->pvOnPressContext);
+            }
+            button->u16PressedCycles++;
 
+            break;
+        case BUTTON_DEBOUNCE_MASK:
+            if (button->bPressed) {
+                BUTTON_DBG("Button with pin %d released. Endpoint: %d\n", button->u32DioPin, button->u16Endpoint);
+                button->bPressed = FALSE;
+                ResetButtonsState(button);
+            }
+    }
+}
+
+static inline void ResetButtonsState(Button_t* button) {
+    button->bPressed = FALSE;
+    button->u16PressedCycles = 0;
+    button->eState = IDLE;
+}
+
+// static bool_t HandleResetButtonPressed(uint32_t u32DIOState);
+
+//
 // static void ResetButtonsState(tsButtonState* sButtonState) {
 //     sButtonState->eState = IDLE;
 //     sButtonState->u16Cycles = 0;
