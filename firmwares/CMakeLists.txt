@@ -151,7 +151,7 @@ set(SDK_SRC
     ${SDK_PREFIX}/devices/JN5189/system_JN5189.c
     ${SDK_PREFIX}/devices/JN5189/gcc/startup_JN5189.c
 
-    # ${SDK_PREFIX}/devices/JN5189/drivers/fsl_adc.c
+    ${SDK_PREFIX}/devices/JN5189/drivers/fsl_adc.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_aes.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_clock.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_common.c
@@ -228,7 +228,7 @@ set(APP_SRC
     pdum_apdu.S
 
     ${APP_TARGET}/device_config.c
-    # common/src/app_battery.c
+    common/src/app_battery.c
     common/src/app_buttons.c
     common/src/app_leds.c
     common/src/app_main.c
@@ -247,7 +247,7 @@ target_compile_definitions(${APP_TARGET} PRIVATE
     DEBUG_LEDS
     DEBUG_APP_RESOURCES
     DEBUG_APP_EVENTS
-    DEBUG_APP_BUTTONS
+    DEBUG_BUTTONS
     DEBUG_APP_RESOURCES
 )
 

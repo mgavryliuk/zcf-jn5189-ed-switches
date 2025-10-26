@@ -6,12 +6,12 @@
 #include "PDM.h"
 #include "PWR_Interface.h"
 #include "ZTimer.h"
+#include "app_battery.h"
 #include "app_buttons.h"
 #include "app_leds.h"
 #include "app_resources.h"
 #include "dbg.h"
 #include "device_config.h"
-#include "device_definitions.h"
 #include "fsl_power.h"
 #include "fsl_wwdt.h"
 #include "pwrm.h"
@@ -53,7 +53,7 @@ static void PreSleep(void) {
 static void OnWakeUp(void) {
     DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: On WakeUp called\n");
     ZTIMER_vWake();
-    if (POWER_GetIoWakeStatus() & BTN_CTRL_MASK) {
+    if (POWER_GetIoWakeStatus() & device_config.u32ButtonsInterruptMask) {
         DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Button pressed: %08x\n", POWER_GetIoWakeStatus());
         // ZTIMER_eStart(u8TimerButtonScan, BUTTON_SCAN_TIME_MSEC);
     }
@@ -61,23 +61,24 @@ static void OnWakeUp(void) {
 
 static void WakeCallBack(void) {
     DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Wake callback called\n");
-    for (uint8_t i = 0; i < LEDS_AMOUNT; i++) {
-        LED_Blink(leds_configs[i]);
+    for (uint8_t i = 0; i < device_config.u8LedsAmount; i++) {
+        LED_Blink(device_config.psLedsConfigs[i]);
     }
 }
 
 static void EnterMainLoop(void) {
-    PWR_vWakeUpConfig(BTN_CTRL_MASK);
-    for (uint8_t i = 0; i < LEDS_AMOUNT; i++) {
-        LED_Blink(leds_configs[i]);
+    PWR_vWakeUpConfig(device_config.u32ButtonsInterruptMask);
+    for (uint8_t i = 0; i < device_config.u8LedsAmount; i++) {
+        LED_Blink(device_config.psLedsConfigs[i]);
     }
+    (void)BATTERY_GetStatus();
     while (1) {
-        PWR_teStatus eStatus = PWR_eRemoveActivity(&sWake);
-        DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eRemoveActivity status: %d\n", eStatus);
-        eStatus = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
-        DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eScheduleActivity status: %d\n", eStatus);
+        // PWR_teStatus eStatus = PWR_eRemoveActivity(&sWake);
+        // DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eRemoveActivity status: %d\n", eStatus);
+        // eStatus = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
+        // DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eScheduleActivity status: %d\n", eStatus);
         ZTIMER_vTask();
         WWDT_Refresh(WWDT);
-        PWR_EnterLowPower();
+        // PWR_EnterLowPower();
     }
 }

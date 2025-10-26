@@ -12,7 +12,7 @@
 #define LED_BLINK_INTERVAL ZTIMER_TIME_MSEC(1000)
 #define LED_CONTINOUS_BLINK_INTERVAL ZTIMER_TIME_MSEC(250)
 
-#define LEDS_TIMERS_AMOUN (1 + LEDS_AMOUNT)
+#define LEDS_TIMERS_AMOUNT (1 + LEDS_AMOUNT)
 
 typedef struct {
     const uint32_t u32DioPin;
@@ -23,7 +23,7 @@ typedef struct {
     const uint32_t u32Mask;
     uint8_t u8TimerID;
     uint8_t u8State;
-} ResetLedConfig;
+} DeviceSetupLedsConfig;
 
 void LEDS_Hardware_Init();
 void LEDS_Timers_Init();
@@ -31,5 +31,6 @@ void LED_Blink(LedConfig* psConfig);
 void LED_TurnOff(LedConfig* psConfig);
 void LED_BlinkDuringSetup(void* pvParam);
 void LED_BlinkDuringSetup_Stop();
+void LED_ButtonBlinkCallback(void* ctx);
 
 #endif /* APP_LED_H */

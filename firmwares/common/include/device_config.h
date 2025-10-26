@@ -3,6 +3,7 @@
 
 #include <jendefs.h>
 
+#include "app_buttons.h"
 #include "app_leds.h"
 
 /* Maximum number of buttons supported by the firmware.
@@ -16,37 +17,23 @@
 #define MAX_BLINK_STATES (10)
 #endif
 
-extern LedConfig* const leds_configs[];
-extern ResetLedConfig reset_led_config;
-
-typedef struct {
-    const uint32_t u32DioMask;
-    const uint32_t u32LedMask;
-} tsControlMasks;
-
-typedef struct {
-    const uint32_t u32DioMask;
-    const uint32_t u32LedMask;
-    const bool_t bHasLed;
-} tsResetButtonConfig;
-
-typedef struct {
-    const uint32_t u32DioPin;
-    const uint32_t u32LedPin;
-    const uint32_t u32DioMask;
-    const uint32_t u32LedMask;
-    const bool_t bHasLed;
-    const uint16_t u16Endpoint;
-} tsEndpointButtonConfig;
-
 typedef struct {
     const uint8_t u8BasicEndpoint;
     const uint8_t u8ZdoEndpoint;
 
-    const uint8_t u8EndpointButtonsCount;
-    const tsEndpointButtonConfig* psEndpointButtons;
-} tsDeviceConfig;
+    LedConfig* const* psLedsConfigs;
+    const uint8_t u8LedsAmount;
 
-extern const tsDeviceConfig sDeviceConfig;
+    DeviceSetupLedsConfig sDeviceSetupLedsConfig;
+
+    Button* const* psButtons;
+    const uint8_t u8ButtonsAmount;
+
+    const uint32_t u32ButtonsInterruptMask;
+
+    ResetMaskConfig u32ResetMaskConfig;
+} DeviceConfig;
+
+extern DeviceConfig device_config;
 
 #endif /* DEVICE_CONFIG_H */

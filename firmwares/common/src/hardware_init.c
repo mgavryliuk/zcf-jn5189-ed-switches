@@ -54,7 +54,6 @@ static void Clocks_Init(void) {
     CLOCK_AttachClk(kFRO32K_to_OSC32K_CLK);
     CLOCK_AttachClk(kOSC32M_to_USART_CLK);
     CLOCK_AttachClk(kOSC32K_to_WDT_CLK);
-    CLOCK_AttachClk(kXTAL32M_to_ADC_CLK);
 
     CLOCK_EnableClock(kCLOCK_Iocon);
     CLOCK_EnableClock(kCLOCK_InputMux);

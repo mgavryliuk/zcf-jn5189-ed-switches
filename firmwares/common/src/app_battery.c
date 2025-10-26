@@ -1,62 +1,66 @@
-#include <jendefs.h>
-
-#include "dbg.h"
-#include "zcl.h"
-#include "zcl_customcommand.h"
-#include "AppHardwareApi.h"
-#include "PowerConfiguration.h"
-
-#include "device_config.h"
 #include "app_battery.h"
 
-PRIVATE uint8 u8MeasureCycles = BATTERY_MEASURE_DELAY_CYCLES;
+#include <jendefs.h>
 
-PRIVATE void vMeasureBattery(void);
+#include "JN5189.h"
+#include "fsl_adc.h"
+#include "fsl_power.h"
 
-PUBLIC void APP_vMeasureRemainingBattery(void)
-{
-    if (u8MeasureCycles == BATTERY_MEASURE_DELAY_CYCLES) {
-        u8MeasureCycles = 0;
-        vMeasureBattery();
-        return;
+static void BATTERY_ConfigureADC(void);
+static void BATTERY_DisableADC(void);
+
+BatteryStatus_t BATTERY_GetStatus(void) {
+    BATTERY_ConfigureADC();
+    ADC_DoSoftwareTriggerConvSeqA(ADC0);
+
+    BatteryStatus_t batStatus;
+    adc_result_info_t adcResultInfoStruct;
+    while (!ADC_GetChannelConversionResult(ADC0, VBAT_ADC_CHANNEL, &adcResultInfoStruct)) {
     }
-    u8MeasureCycles++;
+    batStatus.voltage_mV = BATTERY_CalcVoltage(adcResultInfoStruct.result);
+    batStatus.percent = BATTERY_CalcPercent(batStatus.voltage_mV);
+
+    BAT_DBG("adcResultInfoStruct.result: %d\r\n", adcResultInfoStruct.result);
+    BAT_DBG("Voltage (mV): %u\n", batStatus.voltage_mV);
+    BAT_DBG("Percentage: %d%%\n", batStatus.percent);
+
+    BATTERY_DisableADC();
+    return batStatus;
 }
 
-PRIVATE void vMeasureBattery(void) {
-    uint8 u8BatteryPercentageRemaining;
+static void BATTERY_ConfigureADC(void) {
+    BAT_DBG("[Battery] Configuring ADC...\n");
+    CLOCK_EnableClock(kCLOCK_Adc0);
+    POWER_EnablePD(kPDRUNCFG_PD_LDO_ADC_EN);
+    CLOCK_AttachClk(kFRO12M_to_ADC_CLK);
+    CLOCK_SetClkDiv(kCLOCK_DivAdcClk, 3U, false);
 
-    vAHI_AdcEnable(E_AHI_ADC_SINGLE_SHOT, E_AHI_AP_INPUT_RANGE_2, E_AHI_ADC_SRC_VOLT);
-    DBG_vPrintf(TRACE_BATTERY, "BATTERY: Getting VDD voltage\n");
-    vAHI_AdcStartSample();
-    while (bAHI_AdcPoll())
-        ;
-    vAHI_AdcDisable();
+    adc_config_t adcConfigStruct;
+    adc_conv_seq_config_t adcConvSeqConfigStruct;
 
-    3.3 * 1024 / 1023 = X
-    uint16 u16AdcValue = u16AHI_AdcRead();
-    uint32 u32Temp = ((uint32)u16AdcValue * 7410);
-    uint16 u16BattLevelmV = (u32Temp >> 11);
-    if (u16BattLevelmV < BATTERY_MIN_MV)
-    {
-        u8BatteryPercentageRemaining = 0;
-        u16BattLevelmV = 0;
-    }
-    else
-    {
-        u8BatteryPercentageRemaining = (uint8)((u16BattLevelmV - BATTERY_MIN_MV) * 100 / BATTERY_DELTA_MV);
-        if (u8BatteryPercentageRemaining > 100)
-        {
-            u8BatteryPercentageRemaining = 100;
-        }
-    }
-    DBG_vPrintf(TRACE_BATTERY, "BATTERY: Voltage: %d mV. MIN: %d, DELTA: %d. Percantage remaining: %d\n",
-                u16BattLevelmV, BATTERY_MIN_MV, BATTERY_DELTA_MV, u8BatteryPercentageRemaining);
+    adcConfigStruct.clockMode = kADC_ClockAsynchronousMode;
+    adcConfigStruct.resolution = kADC_Resolution12bit;
+    adcConfigStruct.sampleTimeNumber = 0;
+    adcConfigStruct.extendSampleTimeNumber = kADC_ExtendSampleTimeNotUsed;
+    ADC_Init(ADC0, &adcConfigStruct);
 
-    tsZCL_ClusterInstance *psZCL_ClusterInstance;
-    teZCL_Status eStatus = eZCL_SearchForClusterEntry(sDeviceConfig.u8BasicEndpoint, GENERAL_CLUSTER_ID_POWER_CONFIGURATION, TRUE, &psZCL_ClusterInstance);
-    DBG_vPrintf(TRACE_BATTERY, "BATTERY: Search for cluster entry %d in endpoint %d status: %d\n", GENERAL_CLUSTER_ID_POWER_CONFIGURATION, sDeviceConfig.u8BasicEndpoint, eStatus);
+    adcConvSeqConfigStruct.channelMask = (1U << VBAT_ADC_CHANNEL);
+    adcConvSeqConfigStruct.triggerMask = 0U;
+    adcConvSeqConfigStruct.triggerPolarity = kADC_TriggerPolarityPositiveEdge;
+    adcConvSeqConfigStruct.enableSingleStep = false;
+    adcConvSeqConfigStruct.enableSyncBypass = false;
+    adcConvSeqConfigStruct.interruptMode = kADC_InterruptForEachSequence;
+    ADC_SetConvSeqAConfig(ADC0, &adcConvSeqConfigStruct);
+    /* A problem with the ADC requires a delay after setup, see RFT 1340 */
+    CLOCK_uDelay(300U);
+    ADC_EnableConvSeqA(ADC0, true);
+    BAT_DBG("ADC configured!\n");
+}
 
-    ((tsCLD_PowerConfiguration *)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryVoltage = (uint8)(u16BattLevelmV / 100);
-    ((tsCLD_PowerConfiguration *)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryPercentageRemaining = u8BatteryPercentageRemaining * 2;
+static void BATTERY_DisableADC(void) {
+    BAT_DBG("Disabling ADC\n");
+    CLOCK_AttachClk(kNONE_to_ADC_CLK);
+    POWER_DisablePD(kPDRUNCFG_PD_LDO_ADC_EN);
+    CLOCK_DisableClock(kCLOCK_Adc0);
+    BAT_DBG("ADC disabled!\n");
 }

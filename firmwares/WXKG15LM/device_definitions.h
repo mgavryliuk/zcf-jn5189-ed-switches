@@ -6,7 +6,8 @@
 #define BTN_LEFT_MASK (1 << BTN_LEFT_DIO)
 #define BTN_RIGHT_DIO (15)  // right button DIO
 #define BTN_RIGHT_MASK (1 << BTN_RIGHT_DIO)
-#define BTN_CTRL_MASK (BTN_LEFT_MASK | BTN_RIGHT_MASK)
+#define BTN_INTERRUPT_MASK (BTN_LEFT_MASK | BTN_RIGHT_MASK)
+#define BTN_RESET_MASK BTN_INTERRUPT_MASK
 /* Button defintions - end */
 
 /* Led definitions */
@@ -16,5 +17,6 @@
 /* Led definitions - end */
 
 #define LEDS_AMOUNT 2
+#define BUTTONS_AMOUNT 2
 
 #endif /* DEVICE_DEFINITIONS_H */
