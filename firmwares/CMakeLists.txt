@@ -250,11 +250,14 @@ set(SDK_SRC
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/Basic.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/BasicCommandHandler.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/Groups.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/GroupsCommandHandler.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/Identify.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/IdentifyCommandHandler.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/IdentifyServerCommands.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/MultistateInputBasic.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/PowerConfiguration.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/OnOff.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/OnOffCommandHandler.c
 
     ${SDK_PREFIX}/middleware/wireless/zigbee/platform/K32W0/platform/timer.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/platform/K32W0/platform/crypto.c
@@ -289,6 +292,7 @@ set(APP_SRC
     common/board_utility.c
     common/hardware_init.c
     common/app_basic_ep.c
+    common/app_on_off_ep.c
     common/ConfigurationCluster.c
 
     pdum_gen.c

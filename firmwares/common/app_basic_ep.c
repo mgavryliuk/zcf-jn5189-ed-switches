@@ -78,7 +78,7 @@ static void BASIC_EP_Callback(tsZCL_CallBackEvent* psEvent) {
             break;
 
         default:
-            BASIC_EP_DBG("Callback event - (%d)\n", psEvent->eEventType);
+            BASIC_EP_DBG("BASIC_EP_Callback event - (%d)\n", psEvent->eEventType);
             break;
     }
 }

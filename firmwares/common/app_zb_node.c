@@ -2,6 +2,7 @@
 
 #include "PDM.h"
 #include "app_basic_ep.h"
+#include "app_on_off_ep.h"
 #include "bdb_api.h"
 #include "device_config.h"
 #include "pdum_gen.h"
@@ -113,7 +114,7 @@ static void ZB_NODE_ZCL_Init(void) {
         ZB_NODE_DBG("eZCL_Status failed with status: %d\n ", eZCL_Status);
     }
     BASIC_EP_Init();
-    // APP_vRegisterOnOffEndPoints();
+    OnOff_EP_Init();
     ZB_NODE_DBG("Configuring ZCL done\n");
 }
 

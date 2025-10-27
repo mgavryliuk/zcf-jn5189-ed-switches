@@ -1,8 +1,6 @@
 #ifndef DEVICE_CONFIG_H
 #define DEVICE_CONFIG_H
 
-#include <jendefs.h>
-
 #include "app_battery.h"
 #include "app_buttons.h"
 #include "app_leds.h"
