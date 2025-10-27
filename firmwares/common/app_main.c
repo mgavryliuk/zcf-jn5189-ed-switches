@@ -9,12 +9,17 @@
 #include "app_battery.h"
 #include "app_buttons.h"
 #include "app_leds.h"
-#include "app_resources.h"
+#include "app_zb_node.h"
+#include "bdb_api.h"
 #include "dbg.h"
 #include "device_config.h"
 #include "fsl_power.h"
 #include "fsl_wwdt.h"
+#include "pdum_gen.h"
 #include "pwrm.h"
+#include "zps_apl_af.h"
+#include "zps_apl_zdo.h"
+#include "zps_gen.h"
 
 static void PreSleep(void);
 static void OnWakeUp(void);
@@ -22,6 +27,7 @@ static void WakeCallBack(void);
 static void EnterMainLoop(void);
 
 static PWR_tsWakeTimerEvent sWake;
+static ZTIMER_tsTimer asTimers[ZTIMER_STORAGE];
 
 void vAppRegisterPWRCallbacks(void) {
     PWR_RegisterLowPowerEnterCallback(PreSleep);
@@ -29,16 +35,21 @@ void vAppRegisterPWRCallbacks(void) {
 }
 
 void main_task(uint32_t parameter) {
-    DBG_vPrintf(TRUE, "APP_MAIN: main_task called\n");
-    APP_Resources_Init();
-
+    APP_MAIN_DBG("main_task called\n");
     PDM_eInitialise(1200, 63, NULL);
-    DBG_vPrintf(TRUE, "APP_MAIN: PDM Init\n");
-
-    PWR_ChangeDeepSleepMode(PWR_E_SLEEP_OSCON_RAMON);
+    APP_MAIN_DBG("PDM_eInitialise done.\n");
+    (void)PWR_ChangeDeepSleepMode(PWR_E_SLEEP_OSCON_RAMON);
     PWR_Init();
-    DBG_vPrintf(TRUE, "APP_MAIN: PWR Init\n");
-    ZTIMER_eStart(device_config.u8ButtonScanTimerID, BUTTON_SCAN_TIME_MSEC);
+    PWR_vForceRadioRetention(TRUE);
+    APP_MAIN_DBG("PWR_Init done.\n");
+    PDUM_vInit();
+    APP_MAIN_DBG("PDUM_vInit done.\n");
+    ZTIMER_eInit(asTimers, sizeof(asTimers) / sizeof(ZTIMER_tsTimer));
+    APP_MAIN_DBG("ZTIMER_eInit done with amount: %d.\n", ZTIMER_STORAGE);
+    BUTTONS_Timers_Init();
+    LEDS_Timers_Init();
+    BATTERY_UpdateStatus();
+    ZB_NODE_Init();
     EnterMainLoop();
 }
 
@@ -47,11 +58,13 @@ static void PreSleep(void) {
     DbgConsole_Flush();
     DbgConsole_Deinit();
     ZTIMER_vSleep();
+    // vAppApiSaveMacSettings(); if device is connected to network
 }
 
 static void OnWakeUp(void) {
     DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: On WakeUp called\n");
     ZTIMER_vWake();
+    // vAppApiRestoreMacSettings();
     if (POWER_GetIoWakeStatus() & device_config.u32ButtonsInterruptMask) {
         DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Button pressed: %08x\n", POWER_GetIoWakeStatus());
         ZTIMER_eStart(device_config.u8ButtonScanTimerID, BUTTON_SCAN_TIME_MSEC);
@@ -64,14 +77,21 @@ static void WakeCallBack(void) {
 
 static void EnterMainLoop(void) {
     while (1) {
-        // TODO: make it later better
+        zps_taskZPS();
+        bdb_taskBDB();
+        ZTIMER_vTask();
+        // TODO: process app queues
+
+        WWDT_Refresh(WWDT);
+
+        // TODO: enter low power based on the timers
         PWR_eRemoveActivity(&sWake);
+        // PWR_teStatus eStatus = PWR_eRemoveActivity(&sWake);
         // DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eRemoveActivity status: %d\n", eStatus);
         PWR_vWakeUpConfig(device_config.u32ButtonsInterruptMask);
         PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
+        // eStatus = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
         // DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eScheduleActivity status: %d\n", eStatus);
-        ZTIMER_vTask();
-        WWDT_Refresh(WWDT);
         PWR_EnterLowPower();
     }
 }

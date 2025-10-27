@@ -25,6 +25,15 @@ typedef struct {
     uint8_t percent;
 } BatteryStatus_t;
 
+typedef struct {
+    const uint16_t u16Endpoint;
+} BatteryConfig_t;
+
+typedef struct {
+    BatteryConfig_t sConfig;
+    BatteryStatus_t sStatus;
+} DeviceBattery_t;
+
 static inline uint16_t BATTERY_CalcVoltage(uint32_t adcValue) {
     return (uint16_t)(adcValue * VREF / ADC_MAX_VALUE);
 }
@@ -38,6 +47,6 @@ static inline uint8_t BATTERY_CalcPercent(uint16_t voltage_mV) {
     return (uint8_t)((uint32_t)(voltage_mV - MIN_BATTERY_VOLTAGE) * 100 / (MAX_BATTERY_VOLTAGE - MIN_BATTERY_VOLTAGE));
 }
 
-BatteryStatus_t BATTERY_GetStatus(void);
+void BATTERY_UpdateStatus(void);
 
 #endif /* APP_BATTERY_H */

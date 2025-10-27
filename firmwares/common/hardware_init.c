@@ -1,13 +1,19 @@
 #include <jendefs.h>
 
 #include "JN5189.h"
+#include "MemManager.h"
 #include "PWR_Interface.h"
+#include "RNG_Interface.h"
+#include "SecLib.h"
+#include "TimersManager.h"
 #include "app_buttons.h"
 #include "app_leds.h"
 #include "app_wwdt.h"
+#include "dbg.h"
 #include "fsl_clock.h"
 #include "fsl_debug_console.h"
 #include "fsl_iocon.h"
+#include "fsl_os_abstraction.h"
 #include "fsl_power.h"
 #include "fsl_reset.h"
 
@@ -19,25 +25,49 @@
 #define UART_PIO_RX (9U)
 #define UART_BAUD_RATE (115200U)
 
-static void Clocks_Init(void);
+#define HW_DBG(...) DBG_vPrintf(DEBUG_ENABLE, "[HW INIT] " __VA_ARGS__)
+
+static void CLOCKS_Init(void);
 static void DBGConsole_Init(void);
+extern void OSA_TimeInit(void);
 
-static bool_t bWarmStart = FALSE;
-
+/**
+ * @brief Initializes essential hardware components.
+ *
+ * This function is called both on cold start and every wake-up from sleep.
+ * Therefore, any initialization that must persist or be refreshed after
+ * waking up (e.g. timers, memory pools, RNG, peripherals) should be placed here.
+ *
+ * It prevents the need to duplicate initialization logic inside the wake-up handler.
+ */
 void hardware_init(void) {
+    static bool_t bWarmStart = FALSE;
+
     POWER_Init();
-    Clocks_Init();
+    CLOCKS_Init();
     DBGConsole_Init();
     if (!bWarmStart) {
+        HW_DBG("Cold start\n");
         bWarmStart = TRUE;
         PWR_vColdStart();
+        HW_DBG("PWR_vColdStart done\n");
     }
+
+    SecLib_Init();
+    HW_DBG("SecLib_Init done\n");
+    RNG_Init();
+    HW_DBG("RNG_Init done\n");
+    TMR_Init();
+    HW_DBG("DBG_vPrintf done\n");
+    MEM_Init();
+    HW_DBG("MEM_Init done\n");
+
+    APP_WWDT_Init();
     BUTTONS_Hardware_Init();
     LEDS_Hardware_Init();
-    APP_WWDT_Init();
 }
 
-static void Clocks_Init(void) {
+static void CLOCKS_Init(void) {
     RESET_PeripheralReset(kUSART0_RST_SHIFT_RSTn);
     RESET_PeripheralReset(kADC0_RST_SHIFT_RSTn);
     RESET_PeripheralReset(kGPIO0_RST_SHIFT_RSTn);
@@ -58,10 +88,11 @@ static void Clocks_Init(void) {
     CLOCK_EnableClock(kCLOCK_Iocon);
     CLOCK_EnableClock(kCLOCK_InputMux);
     CLOCK_EnableClock(kCLOCK_Gint);
-    CLOCK_EnableClock(kCLOCK_Rtc);
 
     SYSCON->MAINCLKSEL = SYSCON_MAINCLKSEL_SEL(2);
     SystemCoreClockUpdate();
+
+    OSA_TimeInit();
 }
 
 static void DBGConsole_Init(void) {

@@ -35,7 +35,7 @@ add_compile_definitions(
     gMainThreadStackSize_c=0
     gMainThreadPriority_c=0
     gTaskMultipleInstancesManagement_c=0
-    ZIGBEE_USE_FRAMEWORK
+    ZIGBEE_USE_FRAMEWORK=1
     cPWR_FullPowerDownMode=1
     gSupportBle=0
     PDM_NO_RTOS
@@ -45,6 +45,7 @@ add_compile_definitions(
     FSL_CLOCK_SET_LDO_CALLED_INTERNALLY
 
     DBG_ENABLE
+    DEBUG_BDB
 )
 
 set(SDK_INCLUDE_FOLDERS
@@ -79,22 +80,27 @@ set(SDK_INCLUDE_FOLDERS
     ${SDK_PREFIX}/middleware/wireless/ieee-802.15.4/Include
     ${SDK_PREFIX}/middleware/wireless/ieee-802.15.4/mMac/Include
     ${SDK_PREFIX}/middleware/wireless/ieee-802.15.4/uMac/Include
-    ${SDK_PREFIX}/wireless/framework/DebugFifo/Include
+    ${SDK_PREFIX}/middleware/wireless/framework/DebugFifo/Include
     ${SDK_PREFIX}/middleware/wireless/zigbee/platform/
     ${SDK_PREFIX}/middleware/wireless/zigbee/BDB/Include
+    ${SDK_PREFIX}/middleware/wireless/zigbee/BDB/Source/Common
+    ${SDK_PREFIX}/middleware/wireless/zigbee/BDB/Source/NwkSteering
+    
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Include
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZigbeeCommon/Include
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZPSAPL/Include
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZPSMAC/Include
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZPSNWK/Include
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZPSTSV/Include
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Include
 
 )
 
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${SDK_INCLUDE_FOLDERS}
-    ${PROJECT_SOURCE_DIR}/firmwares/common/include
+    ${PROJECT_SOURCE_DIR}/firmwares/common
     ${PROJECT_SOURCE_DIR}/firmwares/${APP_TARGET}
 )
 
@@ -182,7 +188,7 @@ set(SDK_SRC
     ${SDK_PREFIX}/components/uart/usart_adapter.c
 
     ${SDK_PREFIX}/middleware/wireless/framework/Common/Heap.c
-    # ${SDK_PREFIX}/middleware/wireless/framework/Common/MicroInt_arm_sdk2.c
+    ${SDK_PREFIX}/middleware/wireless/framework/Common/MicroInt_arm_sdk2.c
     ${SDK_PREFIX}/middleware/wireless/framework/FunctionLib/FunctionLib.c
     ${SDK_PREFIX}/middleware/wireless/framework/Lists/GenericList.c
     ${SDK_PREFIX}/middleware/wireless/framework/GPIO/GPIO_Adapter.c
@@ -197,12 +203,40 @@ set(SDK_SRC
     ${SDK_PREFIX}/middleware/wireless/framework/TimersManager/Source/TimersManager.c
     ${SDK_PREFIX}/middleware/wireless/framework/TimersManager/Source/TMR_Adapter.c
     ${SDK_PREFIX}/middleware/wireless/framework/Messaging/Source/Messaging.c
+    
+    ${SDK_PREFIX}/middleware/wireless/zigbee/BDB/Source/Common/bdb_fr.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/BDB/Source/Common/bdb_start.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/BDB/Source/Common/bdb_state_machine.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/BDB/Source/NwkSteering/bdb_ns.c
 
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZdpExtraction.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZpsBeaconHandler.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZigbeeCommon/Source/app_zps_link_keys.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZigbeeCommon/Source/port_JN518x.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZigbeeCommon/Source/ZTimer.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZigbeeCommon/Source/ZQueue.c
 
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/dlist.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_attribute.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_buffer.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_common.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_command.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_heap.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_library_options.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_reportManager.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_reportMaths.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_reportScheduler.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_reportStructure.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_reportStringHandling.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_search.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_timer.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_transmit.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_PDUbufferReadWrite.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_PDUbufferReadWriteString.c
+
     ${SDK_PREFIX}/middleware/wireless/zigbee/platform/K32W0/platform/timer.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/platform/K32W0/platform/crypto.c
 )
 add_library(${SDK_TARGET} STATIC ${SDK_SRC})
 target_link_libraries(${SDK_TARGET} PUBLIC ${PRE_BUILD_TARGET})
@@ -224,18 +258,19 @@ set(LDLIBS
 )
 
 set(APP_SRC
-    pdum_gen.c
-    pdum_apdu.S
-
     ${APP_TARGET}/device_config.c
-    common/src/app_battery.c
-    common/src/app_buttons.c
-    common/src/app_leds.c
-    common/src/app_main.c
-    common/src/app_resources.c
-    common/src/app_wwdt.c
-    common/src/board_utility.c
-    common/src/hardware_init.c
+    common/app_battery.c
+    common/app_buttons.c
+    common/app_leds.c
+    common/app_main.c
+    common/app_zb_node.c
+    common/app_wwdt.c
+    common/board_utility.c
+    common/hardware_init.c
+
+    pdum_gen.c
+    zps_gen.c
+    pdum_apdu.S
 )
 add_executable(${APP_TARGET} ${APP_SRC})
 
@@ -243,12 +278,11 @@ target_compile_definitions(${APP_TARGET} PRIVATE
     DEBUG_APP_WWDT
     DEBUG_APP_MAIN
     DEBUG_APP_BATTERY
-    DEBUG_APP_BUTTONS
-    DEBUG_LEDS
-    DEBUG_APP_RESOURCES
     DEBUG_APP_EVENTS
+    
+    DEBUG_LEDS
     DEBUG_BUTTONS
-    DEBUG_APP_RESOURCES
+    DEBUG_NODE
 )
 
 target_link_libraries(${APP_TARGET}

@@ -18,7 +18,7 @@ Button_t leftButton = {
     .u8Debounce = BUTTON_DEBOUNCE_MASK,
     .eState = IDLE,
 
-    .pfOnPressCallback = LED_ButtonBlinkCallback,
+    .pfOnPressCallback = LEDS_ButtonBlinkCallback,
     .pvOnPressContext = &leftLedConfig,
 };
 Button_t rightButton = {
@@ -31,7 +31,7 @@ Button_t rightButton = {
     .u8Debounce = BUTTON_DEBOUNCE_MASK,
     .eState = IDLE,
 
-    .pfOnPressCallback = LED_ButtonBlinkCallback,
+    .pfOnPressCallback = LEDS_ButtonBlinkCallback,
     .pvOnPressContext = &rightLedConfig,
 };
 Button_t* const buttons[] = {&leftButton, &rightButton};
@@ -39,6 +39,7 @@ Button_t* const buttons[] = {&leftButton, &rightButton};
 DeviceConfig_t device_config = {
     .u8BasicEndpoint = WXKG15LM_BASIC_ENDPOINT,
     .u8ZdoEndpoint = WXKG15LM_ZDO_ENDPOINT,
+    .bIsJoined = FALSE,
 
     .psLedsConfigs = ledsConfigs,
     .u8LedsAmount = LEDS_AMOUNT,
@@ -49,11 +50,18 @@ DeviceConfig_t device_config = {
     .u8ButtonsAmount = BUTTONS_AMOUNT,
 
     .u32ButtonsInterruptMask = BTN_INTERRUPT_MASK,
-    .u32ResetMaskConfig =
+    .sResetMaskConfig =
         {
             .u32DioMask = BTN_RESET_MASK,
             .bPressed = FALSE,
             .u16PressedCycles = 0,
             .u8Debounce = BUTTON_DEBOUNCE_MASK,
+        },
+    .sDeviceBattery =
+        {
+            .sConfig =
+                {
+                    .u16Endpoint = 1,
+                },
         },
 };
