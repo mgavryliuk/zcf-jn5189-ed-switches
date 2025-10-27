@@ -48,8 +48,9 @@ void main_task(uint32_t parameter) {
     APP_MAIN_DBG("ZTIMER_eInit done with amount: %d.\n", ZTIMER_STORAGE);
     BUTTONS_Timers_Init();
     LEDS_Timers_Init();
-    BATTERY_UpdateStatus();
     ZB_NODE_Init();
+    // Update status also updates cluster, so we should run it after node is configured
+    BATTERY_UpdateStatus();
     EnterMainLoop();
 }
 
@@ -58,13 +59,15 @@ static void PreSleep(void) {
     DbgConsole_Flush();
     DbgConsole_Deinit();
     ZTIMER_vSleep();
-    // vAppApiSaveMacSettings(); if device is connected to network
+    if (device_config.bIsJoined) {
+        vAppApiSaveMacSettings();
+    }
 }
 
 static void OnWakeUp(void) {
     DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: On WakeUp called\n");
     ZTIMER_vWake();
-    // vAppApiRestoreMacSettings();
+    vAppApiRestoreMacSettings();
     if (POWER_GetIoWakeStatus() & device_config.u32ButtonsInterruptMask) {
         DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Button pressed: %08x\n", POWER_GetIoWakeStatus());
         ZTIMER_eStart(device_config.u8ButtonScanTimerID, BUTTON_SCAN_TIME_MSEC);

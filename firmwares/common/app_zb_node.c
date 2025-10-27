@@ -1,6 +1,7 @@
 #include "app_zb_node.h"
 
 #include "PDM.h"
+#include "app_basic_ep.h"
 #include "bdb_api.h"
 #include "device_config.h"
 #include "pdum_gen.h"
@@ -12,6 +13,7 @@ static void ZB_NODE_ZCL_Init(void);
 static void ZB_NODE_Configure_Reporting(void);
 static void ZB_NODE_ExtendedStatusCallBack(ZPS_teExtendedStatus eExtendedStatus);
 static void ZB_NODE_ZCLCallback(tsZCL_CallBackEvent* psEvent);
+static void ZB_NODE_HandleAFEvent(BDB_tsZpsAfEvent* psZpsAfEvent);
 
 tszQueue APP_msgBdbEvents;
 
@@ -20,7 +22,7 @@ void ZB_NODE_Init(void) {
     ZPS_vExtendedStatusSetCallback(ZB_NODE_ExtendedStatusCallBack);
 
     uint16 u16ByteRead;
-    PDM_eReadDataFromRecord(PDM_NETWORK_STATE_ID, &device_config.bIsJoined, sizeof(bool_t), &u16ByteRead);
+    PDM_eReadDataFromRecord(PDM_ID_NETWORK_STATE, &device_config.bIsJoined, sizeof(bool_t), &u16ByteRead);
     ZB_NODE_DBG("Device network state: %s\n", device_config.bIsJoined == TRUE ? "JOINED" : "NO_NETWORK");
 
     ZB_NODE_ZCL_Init();
@@ -41,8 +43,6 @@ void ZB_NODE_Init(void) {
 
     BDB_vStart();
     ZB_NODE_DBG("BDB_vStart done");
-    // BDB_teStatus eStatus = BDB_eNsStartNwkSteering();
-    // ZB_NODE_DBG("NWK Steering status: %d\n", eStatus);
 }
 
 void APP_vBdbCallback(BDB_tsBdbEvent* psBdbEvent) {
@@ -52,9 +52,9 @@ void APP_vBdbCallback(BDB_tsBdbEvent* psBdbEvent) {
             ZB_NODE_DBG("BDB_EVENT_NONE\n");
             break;
 
-        case BDB_EVENT_ZPSAF:  // Use with BDB_tsZpsAfEvent
+        case BDB_EVENT_ZPSAF:
             ZB_NODE_DBG("BDB_EVENT_ZPSAF\n");
-            // vAppHandleAfEvent(&psBdbEvent->uEventData.sZpsAfEvent);
+            ZB_NODE_HandleAFEvent(&psBdbEvent->uEventData.sZpsAfEvent);
             break;
 
         case BDB_EVENT_INIT_SUCCESS:
@@ -62,25 +62,32 @@ void APP_vBdbCallback(BDB_tsBdbEvent* psBdbEvent) {
             break;
 
         case BDB_EVENT_REJOIN_FAILURE:
-            ZB_NODE_DBG("BDB_EVENT_REJOIN_FAILURE\n");
+            ZB_NODE_DBG("Device failed to re-join the network\n");
             break;
 
         case BDB_EVENT_NO_NETWORK:
-            ZB_NODE_DBG("BDB_EVENT_NO_NETWORK\n");
+            ZB_NODE_DBG("Device failed to find a network\n");
             break;
 
         case BDB_EVENT_REJOIN_SUCCESS:
             ZB_NODE_DBG("BDB_EVENT_REJOIN_SUCCESS\n");
-            // vHandleNetworkJoinAndRejoin();
+            device_config.bIsJoined = TRUE;
+            PDM_eSaveRecordData(PDM_ID_NETWORK_STATE, &device_config.bIsJoined, sizeof(bool_t));
+            ZPS_vSaveAllZpsRecords();
+            // TODO
             // APP_vStartPolling(POLL_FAST);
             break;
 
         case BDB_EVENT_NWK_STEERING_SUCCESS:
-            ZB_NODE_DBG("BDB_EVENT_NWK_STEERING_SUCCESS\n");
+            ZB_NODE_DBG("Device successfully joined to network\n");
+            device_config.bIsJoined = TRUE;
+            PDM_eSaveRecordData(PDM_ID_NETWORK_STATE, &device_config.bIsJoined, sizeof(bool_t));
+            ZPS_vSaveAllZpsRecords();
             break;
 
         case BDB_EVENT_APP_START_POLLING:
-            ZB_NODE_DBG("BDB_EVENT_APP_START_POLLING\n");
+            ZB_NODE_DBG("Starting polling for data\n");
+            // TODO
             // APP_vStartPolling(POLL_COMMISSIONING);
             break;
 
@@ -105,14 +112,14 @@ static void ZB_NODE_ZCL_Init(void) {
     if (eZCL_Status != E_ZCL_SUCCESS) {
         ZB_NODE_DBG("eZCL_Status failed with status: %d\n ", eZCL_Status);
     }
-    // APP_vRegisterBasicEndPoint();
+    BASIC_EP_Init();
     // APP_vRegisterOnOffEndPoints();
     ZB_NODE_DBG("Configuring ZCL done\n");
 }
 
 static void ZB_NODE_Configure_Reporting(void) {
     ZB_NODE_DBG("Configuring reporting...\n");
-
+    // TODO:
     ZB_NODE_DBG("Configuring reporting done");
 }
 
@@ -122,4 +129,58 @@ static void ZB_NODE_ExtendedStatusCallBack(ZPS_teExtendedStatus eExtendedStatus)
 
 static void ZB_NODE_ZCLCallback(tsZCL_CallBackEvent* psEvent) {
     ZB_NODE_DBG("ZB_NODE_ZCLCallback event type: %d\n", psEvent->eEventType);
+}
+
+static void ZB_NODE_HandleAFEvent(BDB_tsZpsAfEvent* psZpsAfEvent) {
+    if (psZpsAfEvent->u8EndPoint == device_config.u8BasicEndpoint) {
+        ZB_NODE_DBG("AF Callback. Basic endpoint event received\n ");
+        tsZCL_CallBackEvent sCallBackEvent;
+        sCallBackEvent.pZPSevent = &psZpsAfEvent->sStackEvent;
+        sCallBackEvent.eEventType = E_ZCL_CBET_ZIGBEE_EVENT;
+        vZCL_EventHandler(&sCallBackEvent);
+    } else if (psZpsAfEvent->u8EndPoint == device_config.u8ZdoEndpoint) {
+        ZB_NODE_DBG("AF Callback. ZDO endpoint event received\n");
+        ZPS_tsAfEvent* psAfEvent = &(psZpsAfEvent->sStackEvent);
+        switch (psAfEvent->eType) {
+            case ZPS_EVENT_NWK_LEAVE_INDICATION:
+                ZB_NODE_DBG("AF Callback - ZDO endpoint. Leave Indication %016llx Rejoin %d\n",
+                            psAfEvent->uEvent.sNwkLeaveIndicationEvent.u64ExtAddr, psAfEvent->uEvent.sNwkLeaveIndicationEvent.u8Rejoin);
+                if ((psAfEvent->uEvent.sNwkLeaveIndicationEvent.u64ExtAddr == 0UL) &&
+                    (psAfEvent->uEvent.sNwkLeaveIndicationEvent.u8Rejoin == 0)) {
+                    ZB_NODE_DBG("AF Callback - ZDO endpoint. Leave (no re-join) -> Reset Data Structures\n");
+                    // TODO:
+                    // APP_vFactoryResetRecords();
+                    // vAHI_SwReset();
+                }
+                break;
+
+            case ZPS_EVENT_NWK_LEAVE_CONFIRM:
+                ZB_NODE_DBG("AF Callback - ZDO endpoint. Leave Confirm status %02x Addr %016llx\n",
+                            psAfEvent->uEvent.sNwkLeaveConfirmEvent.eStatus, psAfEvent->uEvent.sNwkLeaveConfirmEvent.u64ExtAddr);
+                if (psAfEvent->uEvent.sNwkLeaveConfirmEvent.u64ExtAddr == 0UL) {
+                    ZB_NODE_DBG("AF Callback - ZDO endpoint. Leave -> Reset Data Structures\n");
+                    // TODO:
+                    // APP_vFactoryResetRecords();
+                    // vAHI_SwReset();
+                }
+                break;
+
+            case ZPS_EVENT_NWK_POLL_CONFIRM:
+                ZB_NODE_DBG("AF Callback - ZDO endpoint. ZPS_EVENT_NWK_POLL_CONFIRM: %d\n",
+                            psAfEvent->uEvent.sNwkPollConfirmEvent.u8Status);
+                // APP_vHandlePollConfirm(&psAfEvent->uEvent.sNwkPollConfirmEvent);
+                break;
+
+            default:
+                ZB_NODE_DBG("AF Callback - ZDO endpoint. Unhandled Event %d\n", psAfEvent->eType);
+                break;
+        }
+    }
+    if (psZpsAfEvent->sStackEvent.eType == ZPS_EVENT_APS_DATA_INDICATION) {
+        ZB_NODE_DBG("AF Callback. ZPS_EVENT_APS_DATA_INDICATION. Freeing APduInstance\n");
+        PDUM_eAPduFreeAPduInstance(psZpsAfEvent->sStackEvent.uEvent.sApsDataIndEvent.hAPduInst);
+    } else if (psZpsAfEvent->sStackEvent.eType == ZPS_EVENT_APS_INTERPAN_DATA_INDICATION) {
+        ZB_NODE_DBG("AF Callback. ZPS_EVENT_APS_INTERPAN_DATA_INDICATION. Freeing APduInstance\n");
+        PDUM_eAPduFreeAPduInstance(psZpsAfEvent->sStackEvent.uEvent.sApsInterPanDataIndEvent.hAPduInst);
+    }
 }

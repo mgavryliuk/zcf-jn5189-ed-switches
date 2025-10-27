@@ -2,17 +2,17 @@
 #define DEVICE_DEFINITIONS_H
 
 /* Button defintions */
-#define BTN_LEFT_DIO (12)  // left button DIO
+#define BTN_LEFT_DIO (14)  // left button DIO
 #define BTN_LEFT_MASK (1 << BTN_LEFT_DIO)
-#define BTN_RIGHT_DIO (14)  // right button DIO
+#define BTN_RIGHT_DIO (15)  // right button DIO
 #define BTN_RIGHT_MASK (1 << BTN_RIGHT_DIO)
 #define BTN_INTERRUPT_MASK (BTN_LEFT_MASK | BTN_RIGHT_MASK)
 #define BTN_RESET_MASK BTN_INTERRUPT_MASK
 /* Button defintions - end */
 
 /* Led definitions */
-#define LED_LEFT_DIO (0)
-#define LED_RIGHT_DIO (15)
+#define LED_LEFT_DIO (18)
+#define LED_RIGHT_DIO (19)
 #define RESET_LED_MASK (1UL << LED_LEFT_DIO) | (1UL << LED_RIGHT_DIO)
 /* Led definitions - end */
 

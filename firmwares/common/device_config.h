@@ -7,8 +7,6 @@
 #include "app_buttons.h"
 #include "app_leds.h"
 
-#define PDM_NETWORK_STATE_ID 0x8
-
 typedef struct {
     const uint8_t u8BasicEndpoint;
     const uint8_t u8ZdoEndpoint;

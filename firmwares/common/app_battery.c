@@ -1,12 +1,12 @@
 #include "app_battery.h"
 
 #include <device_config.h>
-#include <jendefs.h>
 
 #include "JN5189.h"
+#include "PowerConfiguration.h"
 #include "fsl_adc.h"
 #include "fsl_power.h"
-// #include "zcl_customcommand.h"
+#include "zcl_customcommand.h"
 
 static void BATTERY_ConfigureADC(void);
 static void BATTERY_DisableADC(void);
@@ -69,28 +69,16 @@ static void BATTERY_DisableADC(void) {
 }
 
 static void BATTERY_UpdateCluster(void) {
-    BAT_DBG("Updating PowerConfiguration cluster! - NOT IMPLEMENTED\n");
+    BAT_DBG("Updating PowerConfiguration cluster!\n");
+    tsZCL_ClusterInstance* psZCL_ClusterInstance;
+    teZCL_Status eStatus =
+        eZCL_SearchForClusterEntry(device_config.u8BasicEndpoint, GENERAL_CLUSTER_ID_POWER_CONFIGURATION, TRUE, &psZCL_ClusterInstance);
+    BAT_DBG("Search for cluster entry %d in endpoint %d status: %d\n", GENERAL_CLUSTER_ID_POWER_CONFIGURATION,
+            device_config.u8BasicEndpoint, eStatus);
 
-    // tsZCL_ClusterInstance* psZCL_ClusterInstance;
-    // teZCL_Status eStatus =
-    //     eZCL_SearchForClusterEntry(sDeviceConfig.u8BasicEndpoint, GENERAL_CLUSTER_ID_POWER_CONFIGURATION, TRUE, &psZCL_ClusterInstance);
-    // DBG_vPrintf(TRACE_BATTERY, "BATTERY: Search for cluster entry %d in endpoint %d status: %d\n",
-    // GENERAL_CLUSTER_ID_POWER_CONFIGURATION,
-    //             sDeviceConfig.u8BasicEndpoint, eStatus);
-
-    // ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryVoltage = (uint8)(u16BattLevelmV / 100);
-    // ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryPercentageRemaining =
-    //     u8BatteryPercentageRemaining * 2;
-    // tsZCL_ClusterInstance* psZCL_ClusterInstance;
-    // teZCL_Status eStatus =
-    //     eZCL_SearchForClusterEntry(sDeviceConfig.u8BasicEndpoint, GENERAL_CLUSTER_ID_POWER_CONFIGURATION, TRUE, &psZCL_ClusterInstance);
-    // DBG_vPrintf(TRACE_BATTERY, "BATTERY: Search for cluster entry %d in endpoint %d status: %d\n",
-    // GENERAL_CLUSTER_ID_POWER_CONFIGURATION,
-    //             sDeviceConfig.u8BasicEndpoint, eStatus);
-
-    // ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryVoltage = (uint8)(u16BattLevelmV / 100);
-    // ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryPercentageRemaining =
-    //     u8BatteryPercentageRemaining * 2;
-
+    ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryVoltage =
+        (uint8)(device_config.sDeviceBattery.sStatus.voltage_mV / 100);
+    ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryPercentageRemaining =
+        device_config.sDeviceBattery.sStatus.percent * 2;
     BAT_DBG("PowerConfiguration cluster sucessfully updated!\n");
 }

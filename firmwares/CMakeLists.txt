@@ -2,6 +2,8 @@ set(APP_TARGET ${TARGET})
 set(SDK_TARGET SDK)
 set(PRE_BUILD_TARGET ZPS_PDUM_lib)
 set(VENV_DIR $ENV{VENV_DIR})
+set(BUILD_NUMBER "000001")
+string(TIMESTAMP BUILD_DATE "%Y%m%d" UTC)
 
 set(JENNIC_CHIP JN5189)
 set(JENNIC_CHIP_FAMILY JN518x)
@@ -45,7 +47,9 @@ add_compile_definitions(
     FSL_CLOCK_SET_LDO_CALLED_INTERNALLY
 
     DBG_ENABLE
-    DEBUG_BDB
+    # DEBUG_BDB
+    BUILD_DATE="${BUILD_DATE}"
+    BUILD_NUMBER="${BUILD_NUMBER}"
 )
 
 set(SDK_INCLUDE_FOLDERS
@@ -94,6 +98,7 @@ set(SDK_INCLUDE_FOLDERS
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZPSNWK/Include
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZPSTSV/Include
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Include
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source
 
 )
 
@@ -222,6 +227,8 @@ set(SDK_SRC
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_buffer.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_common.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_command.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_defaultResponse.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_event.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_heap.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_library_options.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_reportManager.c
@@ -232,8 +239,22 @@ set(SDK_SRC
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_search.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_timer.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_transmit.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_CustomCommandSend.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_CustomCommandReceive.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_PDUbufferReadWrite.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_PDUbufferReadWriteString.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_WriteAttributesRequestHandle.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_readAttributesRequestHandle.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCIF/Source/zcl_readAttributesResponseHandle.c
+
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/Basic.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/BasicCommandHandler.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/Groups.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/Identify.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/IdentifyCommandHandler.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/IdentifyServerCommands.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/MultistateInputBasic.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/PowerConfiguration.c
 
     ${SDK_PREFIX}/middleware/wireless/zigbee/platform/K32W0/platform/timer.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/platform/K32W0/platform/crypto.c
@@ -267,6 +288,8 @@ set(APP_SRC
     common/app_wwdt.c
     common/board_utility.c
     common/hardware_init.c
+    common/app_basic_ep.c
+    common/ConfigurationCluster.c
 
     pdum_gen.c
     zps_gen.c

@@ -18,6 +18,8 @@
 #define MCPS_QUEUE_SIZE 20
 #define MCPS_DCFM_QUEUE_SIZE 5
 
+#define PDM_ID_NETWORK_STATE 0x8
+
 extern tszQueue APP_msgBdbEvents;
 
 extern tszQueue zps_msgMlmeDcfmInd;
