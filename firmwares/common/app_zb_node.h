@@ -1,8 +1,7 @@
 #ifndef APP_NODE_H
 #define APP_NODE_H
 
-#include "bdb_api.h"
-#include "tsv_pub.h"
+#include "ZQueue.h"
 
 #ifdef DEBUG_NODE
 #define TRACE_NODE TRUE

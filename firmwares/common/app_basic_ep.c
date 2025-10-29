@@ -35,7 +35,9 @@ void BASIC_EP_Init(void) {
 
     eZCL_Status = eCLD_ConfigurationCreateConfiguration(&sBasicEndpoint.sClusterInstance.sConfigurationServer, TRUE, &sCLD_Configuration,
                                                         &sBasicEndpoint.sConfigurationCluster, &au8ConfigurationAttributeControlBits[0]);
-    BASIC_EP_DBG("Configuring Custom Button Mode cluster status: %d\n", eZCL_Status);
+    if (eZCL_Status != E_ZCL_SUCCESS) {
+        BASIC_EP_DBG("eCLD_ConfigurationCreateConfiguration failed with status : % d\n ", eZCL_Status);
+    }
 
     sBasicEndpoint.sEndPoint.u8EndPointNumber = device_config.u8BasicEndpoint;
     sBasicEndpoint.sEndPoint.u16ManufacturerCode = ZCL_MANUFACTURER_CODE;

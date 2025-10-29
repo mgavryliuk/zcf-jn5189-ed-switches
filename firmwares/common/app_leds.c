@@ -1,7 +1,5 @@
 #include "app_leds.h"
 
-#include <stdint.h>
-
 #include "ZTimer.h"
 #include "device_config.h"
 #include "fsl_gpio.h"
@@ -30,7 +28,7 @@ void LEDS_Timers_Init(void) {
         ZTIMER_eOpen(&led->u8TimerID, LEDS_BlinkCallback, led, ZTIMER_FLAG_PREVENT_SLEEP);
         LEDS_DBG("LED(%u). Blink turn off Timer ID - %d\n", led->u32DioPin, led->u8TimerID);
     }
-    ZTIMER_eOpen(&device_config.sDeviceSetupLedsConfig.u8TimerID, LEDS_BlinkDuringSetup, NULL, ZTIMER_FLAG_PREVENT_SLEEP);
+    ZTIMER_eOpen(&device_config.sDeviceSetupLedsConfig.u8TimerID, LEDS_BlinkDuringNetworkSetup, NULL, ZTIMER_FLAG_PREVENT_SLEEP);
     LEDS_DBG("LEDS_Init finished. Blink during setup Timer ID - %d\n", device_config.sDeviceSetupLedsConfig.u8TimerID);
 }
 
@@ -53,7 +51,7 @@ void LEDS_TurnOff(LedConfig_t* led_config) {
     GPIO_PortSet(GPIO, 0, 1U << led_config->u32DioPin);
 }
 
-void LEDS_BlinkDuringSetup(void* pvParam) {
+void LEDS_BlinkDuringNetworkSetup(void* pvParam) {
     if (device_config.sDeviceSetupLedsConfig.u8State) {
         LEDS_DBG("Blink during setup. Turning OFF\n");
         GPIO_PortSet(GPIO, 0, device_config.sDeviceSetupLedsConfig.u32Mask);
@@ -67,7 +65,7 @@ void LEDS_BlinkDuringSetup(void* pvParam) {
     }
 }
 
-void LEDS_BlinkDuringSetup_Stop(void) {
+void LEDS_BlinkDuringNetworkSetup_Stop(void) {
     LEDS_DBG("Blink during setup. Stopping...\n");
     GPIO_PortSet(GPIO, 0, device_config.sDeviceSetupLedsConfig.u32Mask);
     device_config.sDeviceSetupLedsConfig.u8State = FALSE;

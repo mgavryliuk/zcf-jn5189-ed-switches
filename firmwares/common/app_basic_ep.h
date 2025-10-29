@@ -14,7 +14,7 @@
 #define TRACE_BASIC_EP FALSE
 #endif
 
-#define BASIC_EP_DBG(...) DBG_vPrintf(TRACE_BASIC_EP, "[Basic Endpoint] " __VA_ARGS__)
+#define BASIC_EP_DBG(...) DBG_vPrintf(TRACE_BASIC_EP, "[BASIC EP] " __VA_ARGS__)
 
 typedef struct {
     tsZCL_ClusterInstance sBasicServer;

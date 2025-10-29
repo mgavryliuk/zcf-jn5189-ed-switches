@@ -63,7 +63,7 @@ void hardware_init(void) {
     HW_DBG("MEM_Init done\n");
 
     APP_WWDT_Init();
-    BUTTONS_Hardware_Init();
+    BUTTONS_HW_Init();
     LEDS_Hardware_Init();
 }
 
@@ -80,9 +80,11 @@ static void CLOCKS_Init(void) {
 
     CLOCK_AttachClk(kXTAL32M_to_MAIN_CLK);
     CLOCK_AttachClk(kMAIN_CLK_to_ASYNC_APB);
+
     CLOCK_AttachClk(kXTAL32M_to_OSC32M_CLK);
-    CLOCK_AttachClk(kFRO32K_to_OSC32K_CLK);
     CLOCK_AttachClk(kOSC32M_to_USART_CLK);
+
+    CLOCK_AttachClk(kFRO32K_to_OSC32K_CLK);
     CLOCK_AttachClk(kOSC32K_to_WDT_CLK);
 
     CLOCK_EnableClock(kCLOCK_Iocon);

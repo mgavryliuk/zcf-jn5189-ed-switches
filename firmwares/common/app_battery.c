@@ -20,12 +20,12 @@ void BATTERY_UpdateStatus(void) {
     while (!ADC_GetChannelConversionResult(ADC0, VBAT_ADC_CHANNEL, &adcResultInfoStruct)) {
     }
 
-    BatteryStatus_t* deviceBatteryStatus = &device_config.sDeviceBattery.sStatus;
+    DeviceBattery_t deviceBattery = device_config.sDeviceBattery;
     uint16_t voltage_mV = BATTERY_CalcVoltage(adcResultInfoStruct.result);
-    deviceBatteryStatus->voltage_mV = voltage_mV;
-    deviceBatteryStatus->percent = BATTERY_CalcPercent(voltage_mV);
+    deviceBattery.voltage_mV = voltage_mV;
+    deviceBattery.percent = BATTERY_CalcPercent(voltage_mV);
     BAT_DBG("adcResultInfoStruct.result: %d\r\n", adcResultInfoStruct.result);
-    BAT_DBG("Voltage (mV): %u (%d%%)\n", voltage_mV, deviceBatteryStatus->percent);
+    BAT_DBG("Voltage (mV): %u (%d%%)\n", voltage_mV, deviceBattery.percent);
 
     BATTERY_DisableADC();
     BATTERY_UpdateCluster();
@@ -70,6 +70,8 @@ static void BATTERY_DisableADC(void) {
 
 static void BATTERY_UpdateCluster(void) {
     BAT_DBG("Updating PowerConfiguration cluster!\n");
+    DeviceBattery_t deviceBattery = device_config.sDeviceBattery;
+
     tsZCL_ClusterInstance* psZCL_ClusterInstance;
     teZCL_Status eStatus =
         eZCL_SearchForClusterEntry(device_config.u8BasicEndpoint, GENERAL_CLUSTER_ID_POWER_CONFIGURATION, TRUE, &psZCL_ClusterInstance);
@@ -77,8 +79,7 @@ static void BATTERY_UpdateCluster(void) {
             device_config.u8BasicEndpoint, eStatus);
 
     ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryVoltage =
-        (uint8)(device_config.sDeviceBattery.sStatus.voltage_mV / 100);
-    ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryPercentageRemaining =
-        device_config.sDeviceBattery.sStatus.percent * 2;
+        (uint8)(deviceBattery.voltage_mV / 100);
+    ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryPercentageRemaining = deviceBattery.percent * 2;
     BAT_DBG("PowerConfiguration cluster sucessfully updated!\n");
 }

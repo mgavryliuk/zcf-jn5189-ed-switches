@@ -18,6 +18,7 @@ typedef struct {
     Button_t* const* psButtons;
     uint8_t u8ButtonScanTimerID;
     const uint8_t u8ButtonsAmount;
+    // buttons modes? probably some handlers structure, so I know what to call when (?) Like buttons reset
 
     const uint32_t u32ButtonsInterruptMask;
 

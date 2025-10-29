@@ -32,8 +32,8 @@ void LEDS_Hardware_Init(void);
 void LEDS_Timers_Init(void);
 void LEDS_Blink(LedConfig_t* psConfig);
 void LEDS_TurnOff(LedConfig_t* psConfig);
-void LEDS_BlinkDuringSetup(void* pvParam);
-void LEDS_BlinkDuringSetup_Stop(void);
+void LEDS_BlinkDuringNetworkSetup(void* pvParam);
+void LEDS_BlinkDuringNetworkSetup_Stop(void);
 void LEDS_ButtonBlinkCallback(void* ctx);
 
 #endif /* APP_LEDS_H */

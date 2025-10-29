@@ -39,7 +39,7 @@ void CONFIGURATION_CLUSTER_HandleAttrsRange(tsZCL_CallBackEvent* psEvent) {
         uint8 mode = *((uint8*)psEvent->uMessage.sIndividualAttributeResponse.pvAttributeData);
         CONFIG_CLUSTER_DBG("Validating attrId %d with value %d\n", attrId, mode);
         if ((mode < E_CLD_BUTTON_MODE_TOGGLE) || (mode > E_CLD_BUTTON_MODE_MULTISTATE_INPUT)) {
-            CONFIG_CLUSTER_DBG("Invelid Mode value: %d\n", mode);
+            CONFIG_CLUSTER_DBG("Invalid Mode value: %d\n", mode);
             psEvent->uMessage.sIndividualAttributeResponse.eAttributeStatus = E_ZCL_ERR_ATTRIBUTE_RANGE;
         }
     }
@@ -56,6 +56,7 @@ void CONFIGURATION_CLUSTER_HandleAttrsWrite(tsZCL_CallBackEvent* psEvent, tsCLD_
                     CONFIG_CLUSTER_DBG("Invalid Mode value: %d\n", mode);
                 } else {
                     sConfigCluster->eButtonMode = mode;
+                    // TODO: think on buttons state reset
                     CONFIGURATION_CLUSTER_SavePDMRecord(sConfigCluster);
                 }
             } else if (attrId == E_CLD_PREVENT_RESET_ATTR_ID_MODE_TYPE) {

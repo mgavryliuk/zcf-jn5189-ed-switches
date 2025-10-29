@@ -21,7 +21,7 @@ void OnOff_EP_Init(void) {
 }
 
 static void OnOff_EP_ConfigureEP(uint8 u8Endpoint, tsZHA_OnOffEndpoint* tsEndpoint) {
-    DBG_vPrintf(TRACE_ON_OFF_EP, "ON_OFF EP: Registering endpoint: %d\n", u8Endpoint);
+    ON_OFF_EP_DBG("Registering endpoint: %d\n", u8Endpoint);
     tsEndpoint->sEndPoint.u8EndPointNumber = u8Endpoint;
     tsEndpoint->sEndPoint.u16ManufacturerCode = ZCL_MANUFACTURER_CODE;
     tsEndpoint->sEndPoint.u16ProfileEnum = HA_PROFILE_ID;

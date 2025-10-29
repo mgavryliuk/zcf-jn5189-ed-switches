@@ -1,6 +1,5 @@
 #include "device_config.h"
 
-#include "app_leds.h"
 #include "device_definitions.h"
 #include "zps_gen.h"
 
@@ -12,27 +11,23 @@ Button_t leftButton = {
     .u16Endpoint = DEVBOARD_LEFTBUTTON_ENDPOINT,
     .u32DioPin = BTN_LEFT_DIO,
     .u32DioMask = BTN_LEFT_MASK,
+    .pvLedConfig = &leftLedConfig,
 
     .bPressed = FALSE,
     .u16PressedCycles = 0,
-    .u8Debounce = BUTTON_DEBOUNCE_MASK,
+    .u8Debounce = BUTTONS_DEBOUNCE_MASK,
     .eState = IDLE,
-
-    .pfOnPressCallback = LEDS_ButtonBlinkCallback,
-    .pvOnPressContext = &leftLedConfig,
 };
 Button_t rightButton = {
     .u16Endpoint = DEVBOARD_RIGHTBUTTON_ENDPOINT,
     .u32DioPin = BTN_RIGHT_DIO,
     .u32DioMask = BTN_RIGHT_MASK,
+    .pvLedConfig = &rightLedConfig,
 
     .bPressed = FALSE,
     .u16PressedCycles = 0,
-    .u8Debounce = BUTTON_DEBOUNCE_MASK,
+    .u8Debounce = BUTTONS_DEBOUNCE_MASK,
     .eState = IDLE,
-
-    .pfOnPressCallback = LEDS_ButtonBlinkCallback,
-    .pvOnPressContext = &rightLedConfig,
 };
 Button_t* const buttons[] = {&leftButton, &rightButton};
 
@@ -44,24 +39,18 @@ DeviceConfig_t device_config = {
     .psLedsConfigs = ledsConfigs,
     .u8LedsAmount = LEDS_AMOUNT,
 
-    .sDeviceSetupLedsConfig = {.u32Mask = RESET_LED_MASK},
-
     .psButtons = buttons,
     .u8ButtonsAmount = BUTTONS_AMOUNT,
-
     .u32ButtonsInterruptMask = BTN_INTERRUPT_MASK,
+
+    .sDeviceSetupLedsConfig = {.u32Mask = RESET_LED_MASK},
     .sResetMaskConfig =
         {
             .u32DioMask = BTN_RESET_MASK,
             .bPressed = FALSE,
             .u16PressedCycles = 0,
-            .u8Debounce = BUTTON_DEBOUNCE_MASK,
+            .u8Debounce = BUTTONS_DEBOUNCE_MASK,
         },
-    .sDeviceBattery =
-        {
-            .sConfig =
-                {
-                    .u16Endpoint = 1,
-                },
-        },
+
+    .sDeviceBattery = {},
 };

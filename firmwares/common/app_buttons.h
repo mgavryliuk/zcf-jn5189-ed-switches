@@ -14,15 +14,15 @@
 #define BUTTON_DBG(...) DBG_vPrintf(TRACE_BUTTONS, "[Button] " __VA_ARGS__)
 #define BUTTONS_TIMERS_AMOUNT (1)
 
-#define RESET_DEVICE_CYCLES (500)  // 500 * BUTTON_SCAN_TIME_MSEC = 5 sec
-#define BUTTON_DEBOUNCE_MASK (0b0111)
-#define BUTTON_SCAN_TIME_MSEC ZTIMER_TIME_MSEC(10)
+#define BUTTONS_RESET_DEVICE_CYCLES (500)  // 500 * BUTTON_SCAN_TIME_MSEC = 5 sec
+#define BUTTONS_DEBOUNCE_MASK (0b0111)
+#define BUTTONS_SCAN_TIME_MSEC ZTIMER_TIME_MSEC(10)
 // 40 * BUTTON_SCAN_TIME_MSEC = 400ms
-#define BTBUTTON_REGISTER_WINDOW_CYCLES (40)
+#define BUTTONS_REGISTER_WINDOW_CYCLES (40)
 // 70 * BUTTON_SCAN_TIME_MSEC = 700ms
-#define BUTTON_LONG_PRESS_REGISTER_CYCLES (70)
+#define BUTTONS_LONG_PRESS_REGISTER_CYCLES (70)
 // 100 * BUTTON_SCAN_TIME_MSEC = 1sec
-#define BUTTON_IDLE_CYCLES_MAX (100)
+#define BUTTONS_IDLE_CYCLES_MAX (100)
 
 typedef void (*ButtonPressHandler_cb_t)(void* ctx);
 
@@ -35,22 +35,23 @@ typedef enum {
 } ButtonState_t;
 
 typedef struct {
+    ButtonPressHandler_cb_t pfOnPressCallback;
+} ButtonCallbacks_t;
+
+typedef struct {
     // Zigbee endpoint
     const uint16_t u16Endpoint;
 
     // Button config
     const uint32_t u32DioPin;
     const uint32_t u32DioMask;
+    void* const pvLedConfig;
 
     // Button State
     bool_t bPressed;
     uint16_t u16PressedCycles;
     uint8_t u8Debounce;
     ButtonState_t eState;
-
-    // Press callback
-    ButtonPressHandler_cb_t pfOnPressCallback;
-    void* pvOnPressContext;
 } Button_t;
 
 typedef struct {
@@ -62,8 +63,7 @@ typedef struct {
     uint8_t u8Debounce;
 } ResetMaskConfig_t;
 
-void BUTTONS_Hardware_Init(void);
-void BUTTONS_Timers_Init(void);
-void BUTTONS_ScanCallback(void* pvParam);
+void BUTTONS_HW_Init(void);
+void BUTTONS_SW_Init(const ButtonCallbacks_t* callbacks);
 
 #endif /* APP_BUTTONS_H */

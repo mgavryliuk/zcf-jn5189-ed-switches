@@ -23,15 +23,6 @@
 typedef struct {
     uint16_t voltage_mV;
     uint8_t percent;
-} BatteryStatus_t;
-
-typedef struct {
-    const uint16_t u16Endpoint;
-} BatteryConfig_t;
-
-typedef struct {
-    BatteryConfig_t sConfig;
-    BatteryStatus_t sStatus;
 } DeviceBattery_t;
 
 static inline uint16_t BATTERY_CalcVoltage(uint32_t adcValue) {

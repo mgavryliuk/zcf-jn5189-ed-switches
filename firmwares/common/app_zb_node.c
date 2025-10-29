@@ -31,7 +31,7 @@ void ZB_NODE_Init(void) {
 
     ZPS_eAplAfInit();
     ZPS_bAplAfSetEndDeviceTimeout(ZED_TIMEOUT_8192_MIN);
-    ZB_NODE_DBG("Zigbee Protocol Stack initialized! End devince timeout set to 8192 minutes (5 days 16 hrs 32 min)");
+    ZB_NODE_DBG("Zigbee Protocol Stack initialized! End devince timeout set to 8192 minutes (5 days 16 hrs 32 min)\n");
 
     BDB_tsInitArgs sInitArgs;
     if (device_config.bIsJoined) {
@@ -40,10 +40,10 @@ void ZB_NODE_Init(void) {
     }
     sInitArgs.hBdbEventsMsgQ = &APP_msgBdbEvents;
     BDB_vInit(&sInitArgs);
-    ZB_NODE_DBG("BDB_vInit done");
+    ZB_NODE_DBG("BDB_vInit done\n");
 
     BDB_vStart();
-    ZB_NODE_DBG("BDB_vStart done");
+    ZB_NODE_DBG("BDB_vStart done\n");
 }
 
 void APP_vBdbCallback(BDB_tsBdbEvent* psBdbEvent) {
@@ -121,7 +121,7 @@ static void ZB_NODE_ZCL_Init(void) {
 static void ZB_NODE_Configure_Reporting(void) {
     ZB_NODE_DBG("Configuring reporting...\n");
     // TODO:
-    ZB_NODE_DBG("Configuring reporting done");
+    ZB_NODE_DBG("Configuring reporting done\n");
 }
 
 static void ZB_NODE_ExtendedStatusCallBack(ZPS_teExtendedStatus eExtendedStatus) {

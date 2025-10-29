@@ -26,6 +26,8 @@ static void OnWakeUp(void);
 static void WakeCallBack(void);
 static void EnterMainLoop(void);
 
+extern void zps_taskZPS(void);
+
 static PWR_tsWakeTimerEvent sWake;
 static ZTIMER_tsTimer asTimers[ZTIMER_STORAGE];
 
@@ -46,7 +48,10 @@ void main_task(uint32_t parameter) {
     APP_MAIN_DBG("PDUM_vInit done.\n");
     ZTIMER_eInit(asTimers, sizeof(asTimers) / sizeof(ZTIMER_tsTimer));
     APP_MAIN_DBG("ZTIMER_eInit done with amount: %d.\n", ZTIMER_STORAGE);
-    BUTTONS_Timers_Init();
+    ButtonCallbacks_t buttonCallbacks = {
+        .pfOnPressCallback = LEDS_ButtonBlinkCallback,
+    };
+    BUTTONS_SW_Init(&buttonCallbacks);
     LEDS_Timers_Init();
     ZB_NODE_Init();
     // Update status also updates cluster, so we should run it after node is configured
@@ -70,7 +75,7 @@ static void OnWakeUp(void) {
     vAppApiRestoreMacSettings();
     if (POWER_GetIoWakeStatus() & device_config.u32ButtonsInterruptMask) {
         DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Button pressed: %08x\n", POWER_GetIoWakeStatus());
-        ZTIMER_eStart(device_config.u8ButtonScanTimerID, BUTTON_SCAN_TIME_MSEC);
+        ZTIMER_eStart(device_config.u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
     }
 }
 
