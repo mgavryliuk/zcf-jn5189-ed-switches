@@ -76,7 +76,7 @@ void CONFIGURATION_CLUSTER_HandleAttrsWrite(tsZCL_CallBackEvent* psEvent, tsCLD_
 }
 
 void CONFIGURATION_CLUSTER_ResetPDMRecord(void) {
-    CONFIG_CLUSTER_DBG("Reseting configuration cluster from PDM\n");
+    CONFIG_CLUSTER_DBG("Removing configuration cluster's PDM Record\n");
     PDM_vDeleteDataRecord(PDM_ID_CONFIGURATION_CLUSTER);
 }
 

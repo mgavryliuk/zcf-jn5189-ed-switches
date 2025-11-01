@@ -50,12 +50,19 @@ void main_task(uint32_t parameter) {
     APP_MAIN_DBG("ZTIMER_eInit done with amount: %d.\n", ZTIMER_STORAGE);
     ButtonCallbacks_t buttonCallbacks = {
         .pfOnPressCallback = LEDS_ButtonBlinkCallback,
+        .pfOnResetCallback = ZB_NODE_OnResetCallback,
     };
     BUTTONS_SW_Init(&buttonCallbacks);
     LEDS_Timers_Init();
-    ZB_NODE_Init();
+    // TODO: pass led blink start stop for ZB NODE
+    ZBNodeCallbacks_t zbNodeCallbacks = {
+        .pfOnNWKSteeringStartCallback = LEDS_BlinkDuringNetworkSetup_Start,
+        .pfOnNWKSteeringStopCallback = LEDS_BlinkDuringNetworkSetup_Stop,
+    };
+    ZB_NODE_Init(&zbNodeCallbacks);
     // Update status also updates cluster, so we should run it after node is configured
     BATTERY_UpdateStatus();
+    // TODO: start button callback here
     EnterMainLoop();
 }
 

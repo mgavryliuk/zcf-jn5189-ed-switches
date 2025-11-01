@@ -19,6 +19,14 @@
 
 #define PDM_ID_NETWORK_STATE 0x8
 
+typedef void (*NWKSteeringStart_cb_t)(void* ctx);
+typedef void (*NWKSteeringStop_cb_t)(void);
+
+typedef struct {
+    NWKSteeringStart_cb_t pfOnNWKSteeringStartCallback;
+    NWKSteeringStop_cb_t pfOnNWKSteeringStopCallback;
+} ZBNodeCallbacks_t;
+
 extern tszQueue APP_msgBdbEvents;
 
 extern tszQueue zps_msgMlmeDcfmInd;
@@ -26,6 +34,7 @@ extern tszQueue zps_msgMcpsDcfmInd;
 extern tszQueue zps_msgMcpsDcfm;
 extern tszQueue zps_TimeEvents;
 
-void ZB_NODE_Init(void);
+void ZB_NODE_Init(const ZBNodeCallbacks_t* callbacks);
+void ZB_NODE_OnResetCallback(void);
 
 #endif /* APP_NODE_H */

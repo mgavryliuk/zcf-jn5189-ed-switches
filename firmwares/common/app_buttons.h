@@ -24,7 +24,8 @@
 // 100 * BUTTON_SCAN_TIME_MSEC = 1sec
 #define BUTTONS_IDLE_CYCLES_MAX (100)
 
-typedef void (*ButtonPressHandler_cb_t)(void* ctx);
+typedef void (*ButtonHandler_cb_t)(void* ctx);
+typedef void (*ButtonResetHandler_cb_t)(void);
 
 typedef enum {
     IDLE = 0,
@@ -35,7 +36,8 @@ typedef enum {
 } ButtonState_t;
 
 typedef struct {
-    ButtonPressHandler_cb_t pfOnPressCallback;
+    ButtonHandler_cb_t pfOnPressCallback;
+    ButtonResetHandler_cb_t pfOnResetCallback;
 } ButtonCallbacks_t;
 
 typedef struct {

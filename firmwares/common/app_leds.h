@@ -13,7 +13,7 @@
 #define LEDS_DBG(...) DBG_vPrintf(TRACE_LEDS, "[LEDS] " __VA_ARGS__)
 
 #define LEDS_BLINK_INTERVAL ZTIMER_TIME_MSEC(100)
-#define LEDS_CONTINOUS_BLINK_INTERVAL ZTIMER_TIME_MSEC(250)
+#define LEDS_CONTINOUS_BLINK_INTERVAL ZTIMER_TIME_MSEC(150)
 
 #define LEDS_TIMERS_AMOUNT (1 + LEDS_AMOUNT)
 
@@ -32,7 +32,7 @@ void LEDS_Hardware_Init(void);
 void LEDS_Timers_Init(void);
 void LEDS_Blink(LedConfig_t* psConfig);
 void LEDS_TurnOff(LedConfig_t* psConfig);
-void LEDS_BlinkDuringNetworkSetup(void* pvParam);
+void LEDS_BlinkDuringNetworkSetup_Start(void* pvParam);
 void LEDS_BlinkDuringNetworkSetup_Stop(void);
 void LEDS_ButtonBlinkCallback(void* ctx);
 

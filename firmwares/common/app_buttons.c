@@ -20,8 +20,7 @@ void BUTTONS_HW_Init(void) {
     gpio_pin_config_t button_config = {
         .pinDirection = kGPIO_DigitalInput,
     };
-    uint8_t i = 0;
-    for (; i < device_config.u8ButtonsAmount; i++) {
+    for (uint8_t i = 0; i < device_config.u8ButtonsAmount; i++) {
         BUTTON_DBG("Configuring button with pin: %d\n", device_config.psButtons[i]->u32DioPin);
         IOCON_PinMuxSet(IOCON, 0, device_config.psButtons[i]->u32DioPin, IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN);
         GPIO_PinInit(GPIO, 0, device_config.psButtons[i]->u32DioPin, &button_config);
@@ -50,6 +49,7 @@ static void BUTTONS_ScanCallback(void* pvParam) {
     GINT_DisableCallback(GINT0);
     uint8_t i;
     bool_t bAnyBtnPressed = FALSE;
+
     uint32_t u32DIOState = GPIO_PortRead(GPIO, 0) & device_config.u32ButtonsInterruptMask;
     for (i = 0; i < device_config.u8ButtonsAmount; i++) {
         HandleButtonState(device_config.psButtons[i], u32DIOState);
@@ -114,34 +114,34 @@ static void HandleButtonState(Button_t* button, uint32_t dioState) {
 }
 
 static void BUTTONS_HandleResetState(uint32_t dioState) {
-    ResetMaskConfig_t resetMaskConfig = device_config.sResetMaskConfig;
+    ResetMaskConfig_t* resetMaskConfig = &device_config.sResetMaskConfig;
 
-    resetMaskConfig.u8Debounce <<= 1;
-    resetMaskConfig.u8Debounce |= (dioState & resetMaskConfig.u32DioMask) ? 1 : 0;
-    resetMaskConfig.u8Debounce &= BUTTONS_DEBOUNCE_MASK;
+    resetMaskConfig->u8Debounce <<= 1;
+    resetMaskConfig->u8Debounce |= (dioState & resetMaskConfig->u32DioMask) ? 1 : 0;
+    resetMaskConfig->u8Debounce &= BUTTONS_DEBOUNCE_MASK;
 
-    switch (resetMaskConfig.u8Debounce) {
+    switch (resetMaskConfig->u8Debounce) {
         case 0:
-            resetMaskConfig.u16PressedCycles++;
-            if (!resetMaskConfig.bPressed) {
-                BUTTON_DBG("Reset device combination pressed. Reset mask: %x\n", resetMaskConfig.u32DioMask);
-                resetMaskConfig.bPressed = TRUE;
+            resetMaskConfig->u16PressedCycles++;
+            if (!resetMaskConfig->bPressed) {
+                BUTTON_DBG("Reset device combination pressed. Reset mask: %x\n", resetMaskConfig->u32DioMask);
+                resetMaskConfig->bPressed = TRUE;
             }
 
-            if (resetMaskConfig.u16PressedCycles == BUTTONS_RESET_DEVICE_CYCLES) {
-                BUTTON_DBG("Sending reset device event\n");
-                // APP_vSendResetDeviceEvent();
+            if (resetMaskConfig->u16PressedCycles == BUTTONS_RESET_DEVICE_CYCLES) {
+                BUTTON_DBG("Reset device combination pressed. \n");
+                if (buttonCallbacks.pfOnResetCallback) {
+                    buttonCallbacks.pfOnResetCallback();
+                }
             }
             break;
 
         case BUTTONS_DEBOUNCE_MASK:
-            if (resetMaskConfig.bPressed) {
+            if (resetMaskConfig->bPressed) {
                 BUTTON_DBG("Reset device combination released\n");
-                resetMaskConfig.bPressed = FALSE;
-                resetMaskConfig.u16PressedCycles = 0;
+                resetMaskConfig->bPressed = FALSE;
+                resetMaskConfig->u16PressedCycles = 0;
             }
-
-        default:
             break;
     }
 }
