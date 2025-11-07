@@ -9,6 +9,7 @@
 #include "app_battery.h"
 #include "app_buttons.h"
 #include "app_leds.h"
+#include "app_polling.h"
 #include "app_zb_node.h"
 #include "bdb_api.h"
 #include "dbg.h"
@@ -80,6 +81,7 @@ static void OnWakeUp(void) {
     DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: On WakeUp called\n");
     ZTIMER_vWake();
     vAppApiRestoreMacSettings();
+    POLL_Start(&POLL_REGULAR_CONFIG);
     if (POWER_GetIoWakeStatus() & device_config.u32ButtonsInterruptMask) {
         DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Button pressed: %08x\n", POWER_GetIoWakeStatus());
         ZTIMER_eStart(device_config.u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);

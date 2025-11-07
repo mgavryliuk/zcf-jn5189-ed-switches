@@ -289,6 +289,7 @@ set(APP_SRC
     common/app_main.c
     common/app_zb_node.c
     common/app_wwdt.c
+    common/app_polling.c
     common/board_utility.c
     common/hardware_init.c
     common/app_basic_ep.c

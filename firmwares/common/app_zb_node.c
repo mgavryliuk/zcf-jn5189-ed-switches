@@ -5,6 +5,7 @@
 #include "PDM.h"
 #include "app_basic_ep.h"
 #include "app_on_off_ep.h"
+#include "app_polling.h"
 #include "bdb_api.h"
 #include "device_config.h"
 #include "fsl_reset.h"
@@ -86,8 +87,7 @@ void APP_vBdbCallback(BDB_tsBdbEvent* psBdbEvent) {
         case BDB_EVENT_REJOIN_SUCCESS:
             ZB_NODE_DBG("BDB_EVENT_REJOIN_SUCCESS\n");
             device_config.bIsJoined = TRUE;
-            // TODO
-            // APP_vStartPolling(POLL_FAST);
+            POLL_Start(&POLL_FAST_CONFIG);
             break;
 
         case BDB_EVENT_NWK_STEERING_SUCCESS:
@@ -102,8 +102,7 @@ void APP_vBdbCallback(BDB_tsBdbEvent* psBdbEvent) {
 
         case BDB_EVENT_APP_START_POLLING:
             ZB_NODE_DBG("Starting polling for data\n");
-            // TODO
-            // APP_vStartPolling(POLL_COMMISSIONING);
+            POLL_Start(&POLL_COMMISIONING_CONFIG);
             break;
 
         default:
@@ -214,7 +213,15 @@ static void ZB_NODE_HandleAFEvent(BDB_tsZpsAfEvent* psZpsAfEvent) {
             case ZPS_EVENT_NWK_POLL_CONFIRM:
                 ZB_NODE_DBG("AF Callback - ZDO endpoint. ZPS_EVENT_NWK_POLL_CONFIRM: %d\n",
                             psAfEvent->uEvent.sNwkPollConfirmEvent.u8Status);
-                // APP_vHandlePollConfirm(&psAfEvent->uEvent.sNwkPollConfirmEvent);
+                // Switch to fast polling or extend its time if data received
+                if (psAfEvent->uEvent.sNwkPollConfirmEvent.u8Status) {
+                    const PollingConfig_t* pollCfg = POLL_GetConfig();
+                    if (pollCfg != &POLL_FAST_CONFIG) {
+                        POLL_Start(&POLL_FAST_CONFIG);
+                    } else {
+                        POLL_ResetAttempts();
+                    }
+                }
                 break;
 
             default:
