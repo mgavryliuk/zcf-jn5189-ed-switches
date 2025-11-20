@@ -28,12 +28,12 @@ typedef void (*ButtonHandler_cb_t)(void* ctx);
 typedef void (*ButtonResetHandler_cb_t)(void);
 
 typedef enum {
-    IDLE = 0,
-    SINGLE_CLICK,
-    DOUBLE_CLICK,
-    TRIPLE_CLICK,
-    LONG_CLICK,
-} ButtonState_t;
+    BTN_CLICK_IDLE = 0,
+    BTN_CLICK_SINGLE,
+    BTN_CLICK_DOUBLE,
+    BTN_CLICK_TRIPLE,
+    BTN_CLICK_LONG,
+} ButtonClickState_t;
 
 typedef struct {
     ButtonHandler_cb_t pfOnPressCallback;
@@ -41,31 +41,46 @@ typedef struct {
 } ButtonCallbacks_t;
 
 typedef struct {
-    // Zigbee endpoint
-    const uint16_t u16Endpoint;
-
-    // Button config
-    const uint32_t u32DioPin;
-    const uint32_t u32DioMask;
-    void* const pvLedConfig;
-
-    // Button State
+    ButtonClickState_t eClickState;
     bool_t bPressed;
     uint16_t u16PressedCycles;
     uint8_t u8Debounce;
-    ButtonState_t eState;
-} Button_t;
+} ButtonState_t;
 
 typedef struct {
     const uint32_t u32DioMask;
+    void* const pvLedConfig;
+    const uint16_t u16Endpoint;
+} Button_t;
 
-    // State
-    bool_t bPressed;
-    uint16_t u16PressedCycles;
-    uint8_t u8Debounce;
-} ResetMaskConfig_t;
+typedef struct {
+    const Button_t* pButton;
+    ButtonState_t sButtonState;
+} ButtonWithState_t;
+
+typedef struct {
+    const uint32_t u32DioMask;
+    void* const pvLedConfig;
+} ResetButton_t;
+
+typedef struct {
+    const ResetButton_t* pButton;
+    ButtonState_t sButtonState;
+} ResetButtonWithState_t;
+
+extern uint8_t g_u8ButtonScanTimerID;
+extern const uint8_t g_u8ButtonsPinsAmount;
+extern const uint32_t g_asButtonsPins[];
+
+extern const uint8_t g_u8ButtonsAmount;
+extern const Button_t g_asButtons[];
+extern const ResetButton_t g_sResetButton;
+extern const uint32_t g_u32ButtonsInterruptMask;
+
+extern const ButtonCallbacks_t g_sButtonsCallbacks;
+extern ButtonWithState_t g_asButtonsStates[];
 
 void BUTTONS_HW_Init(void);
-void BUTTONS_SW_Init(const ButtonCallbacks_t* callbacks);
+void BUTTONS_SW_Init(void);
 
 #endif /* APP_BUTTONS_H */

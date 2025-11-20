@@ -49,11 +49,7 @@ void main_task(uint32_t parameter) {
     APP_MAIN_DBG("PDUM_vInit done.\n");
     ZTIMER_eInit(asTimers, sizeof(asTimers) / sizeof(ZTIMER_tsTimer));
     APP_MAIN_DBG("ZTIMER_eInit done with amount: %d.\n", ZTIMER_STORAGE);
-    ButtonCallbacks_t buttonCallbacks = {
-        .pfOnPressCallback = LEDS_ButtonBlinkCallback,
-        .pfOnResetCallback = ZB_NODE_OnResetCallback,
-    };
-    BUTTONS_SW_Init(&buttonCallbacks);
+    BUTTONS_SW_Init();
     LEDS_Timers_Init();
     // TODO: pass led blink start stop for ZB NODE
     ZBNodeCallbacks_t zbNodeCallbacks = {
@@ -82,9 +78,9 @@ static void OnWakeUp(void) {
     ZTIMER_vWake();
     vAppApiRestoreMacSettings();
     POLL_Start(&POLL_REGULAR_CONFIG);
-    if (POWER_GetIoWakeStatus() & device_config.u32ButtonsInterruptMask) {
+    if (POWER_GetIoWakeStatus() & g_u32ButtonsInterruptMask) {
         DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Button pressed: %08x\n", POWER_GetIoWakeStatus());
-        ZTIMER_eStart(device_config.u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
+        ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
     }
 }
 
@@ -105,7 +101,7 @@ static void EnterMainLoop(void) {
         PWR_eRemoveActivity(&sWake);
         // PWR_teStatus eStatus = PWR_eRemoveActivity(&sWake);
         // DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eRemoveActivity status: %d\n", eStatus);
-        PWR_vWakeUpConfig(device_config.u32ButtonsInterruptMask);
+        PWR_vWakeUpConfig(g_u32ButtonsInterruptMask);
         PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
         // eStatus = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
         // DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eScheduleActivity status: %d\n", eStatus);

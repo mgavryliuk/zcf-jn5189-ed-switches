@@ -285,6 +285,7 @@ set(APP_SRC
     ${APP_TARGET}/device_config.c
     common/app_battery.c
     common/app_buttons.c
+    common/buttons_manifest.c
     common/app_leds.c
     common/app_main.c
     common/app_zb_node.c

@@ -14,16 +14,6 @@ typedef struct {
     const uint8_t u8LedsAmount;
 
     DeviceSetupLedsConfig_t sDeviceSetupLedsConfig;
-
-    Button_t* const* psButtons;
-    uint8_t u8ButtonScanTimerID;
-    const uint8_t u8ButtonsAmount;
-    // buttons modes? probably some handlers structure, so I know what to call when (?) Like buttons reset
-
-    const uint32_t u32ButtonsInterruptMask;
-
-    ResetMaskConfig_t sResetMaskConfig;
-
     DeviceBattery_t sDeviceBattery;
 } DeviceConfig_t;
 

@@ -1,48 +1,50 @@
 #include "app_buttons.h"
 
 #include "ZTimer.h"
-#include "device_config.h"
 #include "fsl_gint.h"
 #include "fsl_gpio.h"
 #include "fsl_iocon.h"
 
 static void BUTTONS_ScanCallback(void* pvParam);
 static void BUTTONS_GINTCallback(void);
-static void BUTTONS_ResetState(Button_t* button);
-static void HandleButtonState(Button_t* button, uint32_t dioState);
+static void BUTTONS_ResetState(ButtonState_t* buttonState);
+static void BUTTONS_HandleButtonState(ButtonWithState_t* buttonWithState, uint32_t dioState);
 static void BUTTONS_HandleResetState(uint32_t dioState);
 
 static uint8_t u16ButtonIdleCycles = 0;
-static ButtonCallbacks_t buttonCallbacks;
+static ResetButtonWithState_t sResetButtonState;
+
+uint8_t g_u8ButtonScanTimerID;
 
 void BUTTONS_HW_Init(void) {
     BUTTON_DBG("Init hardware\n");
     gpio_pin_config_t button_config = {
         .pinDirection = kGPIO_DigitalInput,
     };
-    for (uint8_t i = 0; i < device_config.u8ButtonsAmount; i++) {
-        BUTTON_DBG("Configuring button with pin: %d\n", device_config.psButtons[i]->u32DioPin);
-        IOCON_PinMuxSet(IOCON, 0, device_config.psButtons[i]->u32DioPin, IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN);
-        GPIO_PinInit(GPIO, 0, device_config.psButtons[i]->u32DioPin, &button_config);
+    for (uint8_t i = 0; i < g_u8ButtonsPinsAmount; i++) {
+        BUTTON_DBG("Configuring button with pin: %d\n", g_asButtonsPins[i]);
+        IOCON_PinMuxSet(IOCON, 0, g_asButtonsPins[i], IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN);
+        GPIO_PinInit(GPIO, 0, g_asButtonsPins[i], &button_config);
     }
     BUTTON_DBG("Init hardware finished!\n");
     BUTTON_DBG("Configuring GINT...\n");
     GINT_Init(GINT0);
     GINT_SetCtrl(GINT0, kGINT_CombineOr, kGINT_TrigEdge, BUTTONS_GINTCallback);
-    GINT_ConfigPins(GINT0, kGINT_Port0, 0, device_config.u32ButtonsInterruptMask);
+    GINT_ConfigPins(GINT0, kGINT_Port0, 0, g_u32ButtonsInterruptMask);
     GINT_EnableCallback(GINT0);
     BUTTON_DBG("GINT configured!\n");
 }
 
-void BUTTONS_SW_Init(const ButtonCallbacks_t* callbacks) {
+void BUTTONS_SW_Init(void) {
     BUTTON_DBG("Init timers\n");
-    ZTIMER_eOpen(&device_config.u8ButtonScanTimerID, BUTTONS_ScanCallback, NULL, ZTIMER_FLAG_PREVENT_SLEEP);
+    ZTIMER_eOpen(&g_u8ButtonScanTimerID, BUTTONS_ScanCallback, NULL, ZTIMER_FLAG_PREVENT_SLEEP);
     BUTTON_DBG("Init timers finished!\n");
-    BUTTON_DBG("Configuring callbacks...\n");
-    if (callbacks) {
-        buttonCallbacks = *callbacks;
+    for (uint8_t i = 0; i < g_u8ButtonsAmount; i++) {
+        g_asButtonsStates[i].pButton = &g_asButtons[i];
+        BUTTONS_ResetState(&g_asButtonsStates[i].sButtonState);
     }
-    BUTTON_DBG("Configuring callbacks done!\n");
+    sResetButtonState.pButton = &g_sResetButton;
+    BUTTONS_ResetState(&sResetButtonState.sButtonState);
 }
 
 static void BUTTONS_ScanCallback(void* pvParam) {
@@ -50,14 +52,16 @@ static void BUTTONS_ScanCallback(void* pvParam) {
     uint8_t i;
     bool_t bAnyBtnPressed = FALSE;
 
-    uint32_t u32DIOState = GPIO_PortRead(GPIO, 0) & device_config.u32ButtonsInterruptMask;
-    for (i = 0; i < device_config.u8ButtonsAmount; i++) {
-        HandleButtonState(device_config.psButtons[i], u32DIOState);
-        bAnyBtnPressed |= device_config.psButtons[i]->bPressed;
+    uint32_t u32DIOState = GPIO_PortRead(GPIO, 0) & g_u32ButtonsInterruptMask;
+    for (i = 0; i < g_u8ButtonsAmount; i++) {
+        BUTTONS_HandleButtonState(&g_asButtonsStates[i], u32DIOState);
+        bAnyBtnPressed |= g_asButtonsStates[i].sButtonState.bPressed;
     }
 
     BUTTONS_HandleResetState(u32DIOState);
-    if (bAnyBtnPressed || device_config.sResetMaskConfig.bPressed) {
+    bAnyBtnPressed |= sResetButtonState.sButtonState.bPressed;
+
+    if (bAnyBtnPressed) {
         u16ButtonIdleCycles = 0;
     } else {
         u16ButtonIdleCycles++;
@@ -67,13 +71,13 @@ static void BUTTONS_ScanCallback(void* pvParam) {
         u16ButtonIdleCycles = 0;
         BUTTON_DBG("IDLE cycles achieved. Stopping scan...\n");
         GINT_EnableCallback(GINT0);
-        for (i = 0; i < device_config.u8ButtonsAmount; i++) {
-            BUTTONS_ResetState(device_config.psButtons[i]);
+        for (i = 0; i < g_u8ButtonsAmount; i++) {
+            BUTTONS_ResetState(&g_asButtonsStates[i].sButtonState);
         }
-        ZTIMER_eStop(device_config.u8ButtonScanTimerID);
+        ZTIMER_eStop(g_u8ButtonScanTimerID);
     } else {
-        ZTIMER_eStop(device_config.u8ButtonScanTimerID);
-        ZTIMER_eStart(device_config.u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
+        ZTIMER_eStop(g_u8ButtonScanTimerID);
+        ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
     }
 }
 
@@ -81,66 +85,72 @@ static void BUTTONS_GINTCallback(void) {
     BUTTONS_ScanCallback(NULL);
 }
 
-static void BUTTONS_ResetState(Button_t* button) {
-    button->bPressed = FALSE;
-    button->u16PressedCycles = 0;
-    button->eState = IDLE;
+static void BUTTONS_ResetState(ButtonState_t* buttonState) {
+    buttonState->eClickState = BTN_CLICK_IDLE;
+    buttonState->bPressed = FALSE;
+    buttonState->u16PressedCycles = 0;
+    buttonState->u8Debounce = BUTTONS_DEBOUNCE_MASK;
 }
 
-static void HandleButtonState(Button_t* button, uint32_t dioState) {
-    button->u8Debounce <<= 1;
-    button->u8Debounce |= ((dioState & button->u32DioMask) ? 1 : 0);
-    button->u8Debounce &= BUTTONS_DEBOUNCE_MASK;
+static void BUTTONS_HandleButtonState(ButtonWithState_t* buttonWithState, uint32_t dioState) {
+    const Button_t* button = buttonWithState->pButton;
+    ButtonState_t* buttonState = &buttonWithState->sButtonState;
 
-    switch (button->u8Debounce) {
+    buttonState->u8Debounce <<= 1;
+    buttonState->u8Debounce |= ((dioState & button->u32DioMask) ? 1 : 0);
+    buttonState->u8Debounce &= BUTTONS_DEBOUNCE_MASK;
+
+    switch (buttonState->u8Debounce) {
         case 0:
-            if (!button->bPressed) {
-                BUTTON_DBG("Button with pin %d pressed. Endpoint: %d\n", button->u32DioPin, button->u16Endpoint);
-                button->bPressed = TRUE;
-                if (buttonCallbacks.pfOnPressCallback && button->pvLedConfig) {
-                    buttonCallbacks.pfOnPressCallback(button->pvLedConfig);
+            if (!buttonState->bPressed) {
+                BUTTON_DBG("Button for endpoint `%d` - PRESSED\n", button->u16Endpoint);
+                buttonState->bPressed = TRUE;
+                if (g_sButtonsCallbacks.pfOnPressCallback && button->pvLedConfig) {
+                    g_sButtonsCallbacks.pfOnPressCallback(button->pvLedConfig);
                 }
             }
-            button->u16PressedCycles++;
+            buttonState->u16PressedCycles++;
 
             break;
         case BUTTONS_DEBOUNCE_MASK:
-            if (button->bPressed) {
-                BUTTON_DBG("Button with pin %d released. Endpoint: %d\n", button->u32DioPin, button->u16Endpoint);
-                button->bPressed = FALSE;
-                BUTTONS_ResetState(button);
+            if (buttonState->bPressed) {
+                BUTTON_DBG("Button for endpoint `%d` - RELEASED\n", button->u16Endpoint);
+                BUTTONS_ResetState(buttonState);
             }
     }
 }
 
 static void BUTTONS_HandleResetState(uint32_t dioState) {
-    ResetMaskConfig_t* resetMaskConfig = &device_config.sResetMaskConfig;
+    const ResetButton_t* resetButton = sResetButtonState.pButton;
+    ButtonState_t* buttonState = &sResetButtonState.sButtonState;
 
-    resetMaskConfig->u8Debounce <<= 1;
-    resetMaskConfig->u8Debounce |= (dioState & resetMaskConfig->u32DioMask) ? 1 : 0;
-    resetMaskConfig->u8Debounce &= BUTTONS_DEBOUNCE_MASK;
+    buttonState->u8Debounce <<= 1;
+    buttonState->u8Debounce |= (dioState & resetButton->u32DioMask) ? 1 : 0;
+    buttonState->u8Debounce &= BUTTONS_DEBOUNCE_MASK;
 
-    switch (resetMaskConfig->u8Debounce) {
+    switch (buttonState->u8Debounce) {
         case 0:
-            resetMaskConfig->u16PressedCycles++;
-            if (!resetMaskConfig->bPressed) {
-                BUTTON_DBG("Reset device combination pressed. Reset mask: %x\n", resetMaskConfig->u32DioMask);
-                resetMaskConfig->bPressed = TRUE;
+            buttonState->u16PressedCycles++;
+            if (!buttonState->bPressed) {
+                BUTTON_DBG("Reset device combination pressed. Reset mask: %x\n", resetButton->u32DioMask);
+                buttonState->bPressed = TRUE;
+                if (g_sButtonsCallbacks.pfOnPressCallback && resetButton->pvLedConfig) {
+                    g_sButtonsCallbacks.pfOnPressCallback(resetButton->pvLedConfig);
+                }
             }
 
-            if (resetMaskConfig->u16PressedCycles == BUTTONS_RESET_DEVICE_CYCLES) {
+            if (buttonState->u16PressedCycles == BUTTONS_RESET_DEVICE_CYCLES) {
                 BUTTON_DBG("Reset device combination pressed. \n");
-                if (buttonCallbacks.pfOnResetCallback) {
-                    buttonCallbacks.pfOnResetCallback();
+                if (g_sButtonsCallbacks.pfOnResetCallback) {
+                    g_sButtonsCallbacks.pfOnResetCallback();
                 }
             }
             break;
 
         case BUTTONS_DEBOUNCE_MASK:
-            if (resetMaskConfig->bPressed) {
+            if (buttonState->bPressed) {
                 BUTTON_DBG("Reset device combination released\n");
-                resetMaskConfig->bPressed = FALSE;
-                resetMaskConfig->u16PressedCycles = 0;
+                BUTTONS_ResetState(buttonState);
             }
             break;
     }

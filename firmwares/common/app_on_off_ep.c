@@ -15,8 +15,8 @@ static void OnOff_EP_Callback(tsZCL_CallBackEvent* psEvent);
 
 void OnOff_EP_Init(void) {
     int i = 0;
-    for (i = 0; i < device_config.u8ButtonsAmount; i++) {
-        OnOff_EP_ConfigureEP(device_config.psButtons[i]->u16Endpoint, &tsOnOffButtonEndpoints[i]);
+    for (i = 0; i < g_u8ButtonsAmount; i++) {
+        OnOff_EP_ConfigureEP(g_asButtons[i].u16Endpoint, &tsOnOffButtonEndpoints[i]);
     }
 }
 
