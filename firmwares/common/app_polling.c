@@ -13,7 +13,7 @@ const PollingConfig_t POLL_COMMISIONING_CONFIG = {
 const PollingConfig_t POLL_FAST_CONFIG = {
     .eMode = POLL_FAST,
     .u16IntervalMs = 200,
-    .u8MaxAttempts = 5,
+    .u8MaxAttempts = 10,
     .bPreventSleep = false,
 };
 
@@ -70,6 +70,7 @@ static void POLL_Callback(void* pvParam) {
     ZPS_eAplZdoPoll();
 
     if (psCfg->u8MaxAttempts && sPollState.u8Attempts >= psCfg->u8MaxAttempts) {
+        sPollState.u8Attempts = 0;
         if (psCfg->eMode == POLL_COMMISIONING) {
             sPollState.psConfig = &POLL_FAST_CONFIG;
         } else if (psCfg->eMode == POLL_FAST) {

@@ -21,7 +21,7 @@ void BUTTONS_HW_Init(void) {
     gpio_pin_config_t button_config = {
         .pinDirection = kGPIO_DigitalInput,
     };
-    for (uint8_t i = 0; i < g_u8ButtonsPinsAmount; i++) {
+    for (uint8_t i = 0; i < g_numButtonsPins; i++) {
         BUTTON_DBG("Configuring button with pin: %d\n", g_asButtonsPins[i]);
         IOCON_PinMuxSet(IOCON, 0, g_asButtonsPins[i], IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN);
         GPIO_PinInit(GPIO, 0, g_asButtonsPins[i], &button_config);
@@ -39,7 +39,7 @@ void BUTTONS_SW_Init(void) {
     BUTTON_DBG("Init timers\n");
     ZTIMER_eOpen(&g_u8ButtonScanTimerID, BUTTONS_ScanCallback, NULL, ZTIMER_FLAG_PREVENT_SLEEP);
     BUTTON_DBG("Init timers finished!\n");
-    for (uint8_t i = 0; i < g_u8ButtonsAmount; i++) {
+    for (uint8_t i = 0; i < g_numButtons; i++) {
         g_asButtonsStates[i].pButton = &g_asButtons[i];
         BUTTONS_ResetState(&g_asButtonsStates[i].sButtonState);
     }
@@ -53,7 +53,7 @@ static void BUTTONS_ScanCallback(void* pvParam) {
     bool_t bAnyBtnPressed = FALSE;
 
     uint32_t u32DIOState = GPIO_PortRead(GPIO, 0) & g_u32ButtonsInterruptMask;
-    for (i = 0; i < g_u8ButtonsAmount; i++) {
+    for (i = 0; i < g_numButtons; i++) {
         BUTTONS_HandleButtonState(&g_asButtonsStates[i], u32DIOState);
         bAnyBtnPressed |= g_asButtonsStates[i].sButtonState.bPressed;
     }
@@ -71,7 +71,7 @@ static void BUTTONS_ScanCallback(void* pvParam) {
         u16ButtonIdleCycles = 0;
         BUTTON_DBG("IDLE cycles achieved. Stopping scan...\n");
         GINT_EnableCallback(GINT0);
-        for (i = 0; i < g_u8ButtonsAmount; i++) {
+        for (i = 0; i < g_numButtons; i++) {
             BUTTONS_ResetState(&g_asButtonsStates[i].sButtonState);
         }
         ZTIMER_eStop(g_u8ButtonScanTimerID);

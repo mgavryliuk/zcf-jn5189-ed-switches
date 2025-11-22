@@ -295,6 +295,7 @@ set(APP_SRC
     common/hardware_init.c
     common/app_basic_ep.c
     common/app_on_off_ep.c
+    common/app_reporting.c
     common/ConfigurationCluster.c
     common/sys_irq_handler.c
 
@@ -315,6 +316,7 @@ target_compile_definitions(${APP_TARGET} PRIVATE
     DEBUG_ON_OFF_EP
     DEBUG_POLLING
     DEBUG_BUTTONS
+    DEBUG_REPORTING
     DEBUG_NODE
 )
 

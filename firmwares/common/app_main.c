@@ -60,7 +60,7 @@ void main_task(uint32_t parameter) {
     ZB_NODE_Init(&zbNodeCallbacks);
     // Update status also updates cluster, so we should run it after node is configured
     BATTERY_UpdateStatus();
-    // TODO: start button callback here
+    ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
     EnterMainLoop();
 }
 

@@ -20,12 +20,12 @@ void BATTERY_UpdateStatus(void) {
     while (!ADC_GetChannelConversionResult(ADC0, VBAT_ADC_CHANNEL, &adcResultInfoStruct)) {
     }
 
-    DeviceBattery_t deviceBattery = device_config.sDeviceBattery;
+    DeviceBattery_t* deviceBattery = &device_config.sDeviceBattery;
     uint16_t voltage_mV = BATTERY_CalcVoltage(adcResultInfoStruct.result);
-    deviceBattery.voltage_mV = voltage_mV;
-    deviceBattery.percent = BATTERY_CalcPercent(voltage_mV);
+    deviceBattery->voltage_mV = voltage_mV;
+    deviceBattery->percent = BATTERY_CalcPercent(voltage_mV);
     BAT_DBG("adcResultInfoStruct.result: %d\r\n", adcResultInfoStruct.result);
-    BAT_DBG("Voltage (mV): %u (%d%%)\n", voltage_mV, deviceBattery.percent);
+    BAT_DBG("Voltage (mV): %u (%d%%)\n", voltage_mV, deviceBattery->percent);
 
     BATTERY_DisableADC();
     BATTERY_UpdateCluster();
@@ -77,6 +77,8 @@ static void BATTERY_UpdateCluster(void) {
         eZCL_SearchForClusterEntry(device_config.u8BasicEndpoint, GENERAL_CLUSTER_ID_POWER_CONFIGURATION, TRUE, &psZCL_ClusterInstance);
     BAT_DBG("Search for cluster entry %d in endpoint %d status: %d\n", GENERAL_CLUSTER_ID_POWER_CONFIGURATION,
             device_config.u8BasicEndpoint, eStatus);
+
+    BAT_DBG("Updating  cluster with Voltage (mV): %u (%d%%)\n", deviceBattery.voltage_mV / 100, deviceBattery.percent);
 
     ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryVoltage =
         (uint8)(deviceBattery.voltage_mV / 100);

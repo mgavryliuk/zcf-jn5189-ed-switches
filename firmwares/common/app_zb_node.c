@@ -6,6 +6,7 @@
 #include "app_basic_ep.h"
 #include "app_on_off_ep.h"
 #include "app_polling.h"
+#include "app_reporting.h"
 #include "bdb_api.h"
 #include "device_config.h"
 #include "fsl_reset.h"
@@ -164,7 +165,7 @@ static void ZB_NODE_ZCL_Init(void) {
 
 static void ZB_NODE_Configure_Reporting(void) {
     ZB_NODE_DBG("Configuring reporting...\n");
-    // TODO:
+    REPORTING_MakeSupportedAttributesReportable();
     ZB_NODE_DBG("Configuring reporting done\n");
 }
 
@@ -216,6 +217,9 @@ static void ZB_NODE_HandleAFEvent(BDB_tsZpsAfEvent* psZpsAfEvent) {
                 // Switch to fast polling or extend its time if data received
                 if (psAfEvent->uEvent.sNwkPollConfirmEvent.u8Status == 0) {
                     const PollingConfig_t* pollCfg = POLL_GetConfig();
+                    if (pollCfg == &POLL_COMMISIONING_CONFIG)
+                        break;
+
                     if (pollCfg != &POLL_FAST_CONFIG) {
                         POLL_Start(&POLL_FAST_CONFIG);
                     } else {

@@ -14,11 +14,11 @@ const size_t g_numLeds = sizeof(g_asLeds) / sizeof(g_asLeds[0]);
 const Led_t g_sNetworkSetupLed = {.u32DioMask = RESET_LED_MASK};
 
 // Buttons configurations
-const uint8_t g_u8ButtonsPinsAmount = 2;
+const size_t g_numButtonsPins = 2;
 const uint32_t g_asButtonsPins[] = {BTN_LEFT_DIO, BTN_RIGHT_DIO};
 
 const uint32_t g_u32ButtonsInterruptMask = BTN_INTERRUPT_MASK;
-const uint8_t g_u8ButtonsAmount = BUTTONS_AMOUNT;
+const size_t g_numButtons = BUTTONS_AMOUNT;
 const Button_t g_asButtons[] = {
     {
         .u16Endpoint = DEVBOARD_LEFTBUTTON_ENDPOINT,

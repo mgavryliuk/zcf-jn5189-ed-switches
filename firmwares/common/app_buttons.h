@@ -68,10 +68,10 @@ typedef struct {
 } ResetButtonWithState_t;
 
 extern uint8_t g_u8ButtonScanTimerID;
-extern const uint8_t g_u8ButtonsPinsAmount;
+extern const size_t g_numButtonsPins;
 extern const uint32_t g_asButtonsPins[];
 
-extern const uint8_t g_u8ButtonsAmount;
+extern const size_t g_numButtons;
 extern const Button_t g_asButtons[];
 extern const ResetButton_t g_sResetButton;
 extern const uint32_t g_u32ButtonsInterruptMask;
