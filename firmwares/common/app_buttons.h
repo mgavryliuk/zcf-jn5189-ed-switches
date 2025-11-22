@@ -12,7 +12,6 @@
 #endif
 
 #define BUTTON_DBG(...) DBG_vPrintf(TRACE_BUTTONS, "[Button] " __VA_ARGS__)
-#define BUTTONS_TIMERS_AMOUNT (1)
 
 #define BUTTONS_RESET_DEVICE_CYCLES (500)  // 500 * BUTTON_SCAN_TIME_MSEC = 5 sec
 #define BUTTONS_DEBOUNCE_MASK (0b0111)

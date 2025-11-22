@@ -10,10 +10,6 @@ typedef struct {
     const uint8_t u8ZdoEndpoint;
     bool_t bIsJoined;
 
-    LedConfig_t* const* psLedsConfigs;
-    const uint8_t u8LedsAmount;
-
-    DeviceSetupLedsConfig_t sDeviceSetupLedsConfig;
     DeviceBattery_t sDeviceBattery;
 } DeviceConfig_t;
 

@@ -1,10 +1,9 @@
 #ifndef APP_MAIN_H
 #define APP_MAIN_H
 
-#include "app_buttons.h"
-#include "app_leds.h"
 #include "app_polling.h"
 #include "dbg.h"
+#include "device_definitions.h"
 
 #ifdef DEBUG_APP_MAIN
 #define TRACE_APP_MAIN TRUE
@@ -16,6 +15,7 @@
 
 // #define MAXIMUM_TIME_TO_SLEEP_SEC (60 * 60)
 #define MAXIMUM_TIME_TO_SLEEP_SEC (10 * 1)
-#define ZTIMER_STORAGE (LEDS_TIMERS_AMOUNT + BUTTONS_TIMERS_AMOUNT + POLL_TIMERS_AMOUNT + BDB_ZTIMER_STORAGE)
+// leds amount + 1 network config leds + 1 button pollings + others
+#define ZTIMER_STORAGE (LEDS_AMOUNT + 1 + 1 + POLL_TIMERS_AMOUNT + BDB_ZTIMER_STORAGE)
 
 #endif /* APP_MAIN_H */

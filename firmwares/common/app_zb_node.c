@@ -178,7 +178,7 @@ static void ZB_NODE_ZCLCallback(tsZCL_CallBackEvent* psEvent) {
 
 static void ZB_NODE_HandleAFEvent(BDB_tsZpsAfEvent* psZpsAfEvent) {
     if (psZpsAfEvent->u8EndPoint == device_config.u8BasicEndpoint) {
-        ZB_NODE_DBG("AF Callback. Basic endpoint event received\n ");
+        ZB_NODE_DBG("AF Callback. Basic endpoint event received\n");
         tsZCL_CallBackEvent sCallBackEvent;
         sCallBackEvent.pZPSevent = &psZpsAfEvent->sStackEvent;
         sCallBackEvent.eEventType = E_ZCL_CBET_ZIGBEE_EVENT;
@@ -214,7 +214,7 @@ static void ZB_NODE_HandleAFEvent(BDB_tsZpsAfEvent* psZpsAfEvent) {
                 ZB_NODE_DBG("AF Callback - ZDO endpoint. ZPS_EVENT_NWK_POLL_CONFIRM: %d\n",
                             psAfEvent->uEvent.sNwkPollConfirmEvent.u8Status);
                 // Switch to fast polling or extend its time if data received
-                if (psAfEvent->uEvent.sNwkPollConfirmEvent.u8Status) {
+                if (psAfEvent->uEvent.sNwkPollConfirmEvent.u8Status == 0) {
                     const PollingConfig_t* pollCfg = POLL_GetConfig();
                     if (pollCfg != &POLL_FAST_CONFIG) {
                         POLL_Start(&POLL_FAST_CONFIG);

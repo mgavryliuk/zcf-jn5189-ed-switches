@@ -13,7 +13,9 @@
 /* Led definitions */
 #define LED_LEFT_DIO (18)
 #define LED_RIGHT_DIO (19)
-#define RESET_LED_MASK (1UL << LED_LEFT_DIO) | (1UL << LED_RIGHT_DIO)
+#define LED_LEFT_MASK (1UL << LED_LEFT_DIO)
+#define LED_RIGHT_MASK (1UL << LED_RIGHT_DIO)
+#define RESET_LED_MASK (LED_LEFT_MASK | LED_RIGHT_MASK)
 /* Led definitions - end */
 
 #define LEDS_AMOUNT 2

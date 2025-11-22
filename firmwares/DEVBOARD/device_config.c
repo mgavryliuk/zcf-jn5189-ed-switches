@@ -3,9 +3,15 @@
 #include "device_definitions.h"
 #include "zps_gen.h"
 
-LedConfig_t leftLedConfig = {.u32DioPin = LED_LEFT_DIO};
-LedConfig_t rightLedConfig = {.u32DioPin = LED_RIGHT_DIO};
-LedConfig_t* const ledsConfigs[LEDS_AMOUNT] = {&leftLedConfig, &rightLedConfig};
+const uint8_t g_asLedsPins[] = {LED_LEFT_DIO, LED_RIGHT_DIO};
+const size_t g_numLedsPins = sizeof(g_asLedsPins) / sizeof(g_asLedsPins[0]);
+
+Led_t leftLedConfig = {.u32DioMask = LED_LEFT_MASK};
+Led_t rightLedConfig = {.u32DioMask = LED_RIGHT_MASK};
+const Led_t* const g_asLeds[] = {&leftLedConfig, &rightLedConfig};
+const size_t g_numLeds = sizeof(g_asLeds) / sizeof(g_asLeds[0]);
+
+const Led_t g_sNetworkSetupLed = {.u32DioMask = RESET_LED_MASK};
 
 // Buttons configurations
 const uint8_t g_u8ButtonsPinsAmount = 2;
@@ -13,7 +19,7 @@ const uint32_t g_asButtonsPins[] = {BTN_LEFT_DIO, BTN_RIGHT_DIO};
 
 const uint32_t g_u32ButtonsInterruptMask = BTN_INTERRUPT_MASK;
 const uint8_t g_u8ButtonsAmount = BUTTONS_AMOUNT;
-const Button_t g_asButtons[BUTTONS_AMOUNT] = {
+const Button_t g_asButtons[] = {
     {
         .u16Endpoint = DEVBOARD_LEFTBUTTON_ENDPOINT,
         .u32DioMask = BTN_LEFT_MASK,
@@ -36,9 +42,5 @@ DeviceConfig_t device_config = {
     .u8ZdoEndpoint = DEVBOARD_ZDO_ENDPOINT,
     .bIsJoined = FALSE,
 
-    .psLedsConfigs = ledsConfigs,
-    .u8LedsAmount = LEDS_AMOUNT,
-
-    .sDeviceSetupLedsConfig = {.u32Mask = RESET_LED_MASK},
     .sDeviceBattery = {},
 };

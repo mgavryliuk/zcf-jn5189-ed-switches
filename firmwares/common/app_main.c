@@ -49,6 +49,7 @@ void main_task(uint32_t parameter) {
     APP_MAIN_DBG("PDUM_vInit done.\n");
     ZTIMER_eInit(asTimers, sizeof(asTimers) / sizeof(ZTIMER_tsTimer));
     APP_MAIN_DBG("ZTIMER_eInit done with amount: %d.\n", ZTIMER_STORAGE);
+    POLL_Init();
     BUTTONS_SW_Init();
     LEDS_Timers_Init();
     // TODO: pass led blink start stop for ZB NODE

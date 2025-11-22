@@ -47,7 +47,7 @@ add_compile_definitions(
     FSL_CLOCK_SET_LDO_CALLED_INTERNALLY
 
     DBG_ENABLE
-    DEBUG_BDB
+    # DEBUG_BDB
     BUILD_DATE="${BUILD_DATE}"
     BUILD_NUMBER="${BUILD_NUMBER}"
 )
@@ -285,7 +285,7 @@ set(APP_SRC
     ${APP_TARGET}/device_config.c
     common/app_battery.c
     common/app_buttons.c
-    common/buttons_manifest.c
+    common/buttons_leds_manifest.c
     common/app_leds.c
     common/app_main.c
     common/app_zb_node.c
@@ -313,7 +313,7 @@ target_compile_definitions(${APP_TARGET} PRIVATE
     DEBUG_BASIC_EP
     DEBUG_CONFIGURATION_CLUSTER
     DEBUG_ON_OFF_EP
-    DEBUG_LEDS
+    DEBUG_POLLING
     DEBUG_BUTTONS
     DEBUG_NODE
 )

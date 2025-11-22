@@ -2,7 +2,6 @@
 #define APP_LEDS_H
 
 #include "dbg.h"
-#include "device_definitions.h"
 
 #ifdef DEBUG_LEDS
 #define TRACE_LEDS TRUE
@@ -15,23 +14,28 @@
 #define LEDS_BLINK_INTERVAL ZTIMER_TIME_MSEC(100)
 #define LEDS_CONTINOUS_BLINK_INTERVAL ZTIMER_TIME_MSEC(150)
 
-#define LEDS_TIMERS_AMOUNT (1 + LEDS_AMOUNT)
+typedef struct {
+    const uint32_t u32DioMask;
+} Led_t;
 
 typedef struct {
-    const uint32_t u32DioPin;
+    const Led_t* psLed;
     uint8_t u8TimerID;
-} LedConfig_t;
+    uint8_t u8IsOn;
+} LedWithState_t;
 
-typedef struct {
-    const uint32_t u32Mask;
-    uint8_t u8TimerID;
-    uint8_t u8State;
-} DeviceSetupLedsConfig_t;
+extern const size_t g_numLedsPins;
+extern const uint8_t g_asLedsPins[];
+extern const size_t g_numLeds;
+extern const Led_t* const g_asLeds[];
+extern const Led_t g_sNetworkSetupLed;
+
+extern LedWithState_t g_asLedsStates[];
 
 void LEDS_Hardware_Init(void);
 void LEDS_Timers_Init(void);
-void LEDS_Blink(LedConfig_t* psConfig);
-void LEDS_TurnOff(LedConfig_t* psConfig);
+void LEDS_Blink(LedWithState_t* psLedWithState);
+void LEDS_TurnOff(LedWithState_t* psLedWithState);
 void LEDS_BlinkDuringNetworkSetup_Start(void* pvParam);
 void LEDS_BlinkDuringNetworkSetup_Stop(void);
 void LEDS_ButtonBlinkCallback(void* ctx);

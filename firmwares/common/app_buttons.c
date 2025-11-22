@@ -130,7 +130,6 @@ static void BUTTONS_HandleResetState(uint32_t dioState) {
 
     switch (buttonState->u8Debounce) {
         case 0:
-            buttonState->u16PressedCycles++;
             if (!buttonState->bPressed) {
                 BUTTON_DBG("Reset device combination pressed. Reset mask: %x\n", resetButton->u32DioMask);
                 buttonState->bPressed = TRUE;
@@ -139,6 +138,7 @@ static void BUTTONS_HandleResetState(uint32_t dioState) {
                 }
             }
 
+            buttonState->u16PressedCycles++;
             if (buttonState->u16PressedCycles == BUTTONS_RESET_DEVICE_CYCLES) {
                 BUTTON_DBG("Reset device combination pressed. \n");
                 if (g_sButtonsCallbacks.pfOnResetCallback) {
@@ -155,38 +155,3 @@ static void BUTTONS_HandleResetState(uint32_t dioState) {
             break;
     }
 }
-
-// static bool_t HandleButtonState(tsButtonState* sButtonState, uint32_t u32DIOState) {
-//     uint8_t u8ButtonUp = (u32DIOState & sButtonState->u.sEndpointBtnConfig->u32DioMask) ? 1 : 0;
-//     sButtonState->u8Debounce <<= 1;
-//     sButtonState->u8Debounce |= u8ButtonUp;
-//     sButtonState->u8Debounce &= APP_BTN_DEBOUNCE_MASK;
-
-//     switch (sButtonState->u8Debounce) {
-//         case 0:
-//             if (!sButtonState->bPressed) {
-//                 if (sButtonState->u.sEndpointBtnConfig->bHasLed) {
-//                     APP_Leds_Blink(sButtonState->u.sEndpointBtnConfig->u32LedMask, 1);
-//                 }
-//                 DBG_vPrintf(TRACE_BUTTONS, "BUTTONS: DIO for mask %x pressed. Endpoint %d\n",
-//                             sButtonState->u.sEndpointBtnConfig->u32DioMask, sButtonState->u.sEndpointBtnConfig->u16Endpoint);
-//                 sButtonState->bPressed = TRUE;
-//                 // APP_vSendButtonEvent(
-//                 //     sButtonState->u.sEndpointBtnConfig->u16Endpoint,
-//                 //     BUTTON_TOGGLE_ACTION);
-//             }
-//             break;
-
-//         case APP_BTN_DEBOUNCE_MASK:
-//             if (sButtonState->bPressed) {
-//                 DBG_vPrintf(TRACE_BUTTONS, "BUTTONS: DIO for mask %x released. Endpoint %d\n",
-//                             sButtonState->u.sEndpointBtnConfig->u32DioMask, sButtonState->u.sEndpointBtnConfig->u16Endpoint);
-//                 sButtonState->bPressed = FALSE;
-//                 ResetButtonsState(sButtonState);
-//             }
-
-//         default:
-//             break;
-//     }
-//     return sButtonState->bPressed;
-// }
