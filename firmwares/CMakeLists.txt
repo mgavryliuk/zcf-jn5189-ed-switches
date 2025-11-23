@@ -296,6 +296,7 @@ set(APP_SRC
     common/app_basic_ep.c
     common/app_on_off_ep.c
     common/app_reporting.c
+    common/app_zcl_tick.c
     common/ConfigurationCluster.c
     common/sys_irq_handler.c
 
@@ -318,6 +319,7 @@ target_compile_definitions(${APP_TARGET} PRIVATE
     DEBUG_BUTTONS
     DEBUG_REPORTING
     DEBUG_NODE
+    DEBUG_ZCL_TICK
 )
 
 target_link_libraries(${APP_TARGET}

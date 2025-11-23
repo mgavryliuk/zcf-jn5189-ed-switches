@@ -15,7 +15,7 @@
 
 // #define MAXIMUM_TIME_TO_SLEEP_SEC (60 * 60)
 #define MAXIMUM_TIME_TO_SLEEP_SEC (10 * 1)
-// leds amount + 1 network config leds + 1 button pollings + others
-#define ZTIMER_STORAGE (LEDS_AMOUNT + 1 + 1 + POLL_TIMERS_AMOUNT + BDB_ZTIMER_STORAGE)
+// leds amount + 1 network config leds + 1 button pollings + 1 ZCL tick + 1 POLLING + BDB Timers
+#define ZTIMER_STORAGE (LEDS_AMOUNT + 1 + 1 + 1 + 1 + BDB_ZTIMER_STORAGE)
 
 #endif /* APP_MAIN_H */

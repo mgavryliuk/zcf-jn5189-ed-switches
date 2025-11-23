@@ -7,6 +7,7 @@
 #include "app_on_off_ep.h"
 #include "app_polling.h"
 #include "app_reporting.h"
+#include "app_zcl_tick.h"
 #include "bdb_api.h"
 #include "device_config.h"
 #include "fsl_reset.h"
@@ -37,7 +38,7 @@ void ZB_NODE_Init(const ZBNodeCallbacks_t* callbacks) {
     uint16 u16ByteRead;
     PDM_eReadDataFromRecord(PDM_ID_NETWORK_STATE, &device_config.bIsJoined, sizeof(bool_t), &u16ByteRead);
     ZB_NODE_DBG("Device network state: %s\n", device_config.bIsJoined == TRUE ? "JOINED" : "NO_NETWORK");
-
+    ZCLTick_Init();
     ZB_NODE_ZCL_Init();
     ZB_NODE_Configure_Reporting();
 
@@ -160,6 +161,7 @@ static void ZB_NODE_ZCL_Init(void) {
     }
     BASIC_EP_Init();
     OnOff_EP_Init();
+    ZCLTick_Start();
     ZB_NODE_DBG("Configuring ZCL done\n");
 }
 
@@ -218,7 +220,7 @@ static void ZB_NODE_HandleAFEvent(BDB_tsZpsAfEvent* psZpsAfEvent) {
                 if (psAfEvent->uEvent.sNwkPollConfirmEvent.u8Status == 0) {
                     const PollingConfig_t* pollCfg = POLL_GetConfig();
                     if (pollCfg == &POLL_COMMISIONING_CONFIG)
-                        break;
+                        return;
 
                     if (pollCfg != &POLL_FAST_CONFIG) {
                         POLL_Start(&POLL_FAST_CONFIG);

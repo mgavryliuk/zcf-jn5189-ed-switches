@@ -11,7 +11,6 @@
 #endif
 
 #define POLL_DBG(...) DBG_vPrintf(TRACE_POLLING, "[POLLING] " __VA_ARGS__)
-#define POLL_TIMERS_AMOUNT (1)
 
 typedef enum {
     POLL_COMMISIONING,
@@ -23,7 +22,6 @@ typedef struct {
     PollMode_e eMode;
     uint16_t u16IntervalMs;
     uint8_t u8MaxAttempts;  // 0 = infinite
-    bool bPreventSleep;
 } PollingConfig_t;
 
 typedef struct {
@@ -37,8 +35,10 @@ extern const PollingConfig_t POLL_FAST_CONFIG;
 
 void POLL_Init(void);
 void POLL_Start(const PollingConfig_t* psConfig);
+void POLL_Stop(void);
 void POLL_ResetAttempts(void);
 bool_t POLL_IsSleepAllowed(void);
+bool_t POLL_IsRunning(void);
 const PollingConfig_t* POLL_GetConfig(void);
 
 #endif

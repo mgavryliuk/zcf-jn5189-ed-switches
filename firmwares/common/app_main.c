@@ -11,8 +11,8 @@
 #include "app_leds.h"
 #include "app_polling.h"
 #include "app_zb_node.h"
+#include "app_zcl_tick.h"
 #include "bdb_api.h"
-#include "dbg.h"
 #include "device_config.h"
 #include "fsl_power.h"
 #include "fsl_wwdt.h"
@@ -26,8 +26,10 @@ static void PreSleep(void);
 static void OnWakeUp(void);
 static void WakeCallBack(void);
 static void EnterMainLoop(void);
+static void vAttemptToSleep(void);
 
 extern void zps_taskZPS(void);
+extern uint8_t mLPMFlag;
 
 static PWR_tsWakeTimerEvent sWake;
 static ZTIMER_tsTimer asTimers[ZTIMER_STORAGE];
@@ -43,7 +45,7 @@ void main_task(uint32_t parameter) {
     APP_MAIN_DBG("PDM_eInitialise done.\n");
     (void)PWR_ChangeDeepSleepMode(PWR_E_SLEEP_OSCON_RAMON);
     PWR_Init();
-    PWR_vForceRadioRetention(TRUE);
+    PWR_vForceRadioRetention(FALSE);
     APP_MAIN_DBG("PWR_Init done.\n");
     PDUM_vInit();
     APP_MAIN_DBG("PDUM_vInit done.\n");
@@ -52,7 +54,6 @@ void main_task(uint32_t parameter) {
     POLL_Init();
     BUTTONS_SW_Init();
     LEDS_Timers_Init();
-    // TODO: pass led blink start stop for ZB NODE
     ZBNodeCallbacks_t zbNodeCallbacks = {
         .pfOnNWKSteeringStartCallback = LEDS_BlinkDuringNetworkSetup_Start,
         .pfOnNWKSteeringStopCallback = LEDS_BlinkDuringNetworkSetup_Stop,
@@ -65,7 +66,7 @@ void main_task(uint32_t parameter) {
 }
 
 static void PreSleep(void) {
-    DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PreSleep called\n");
+    APP_MAIN_DBG("PreSleep called\n");
     DbgConsole_Flush();
     DbgConsole_Deinit();
     ZTIMER_vSleep();
@@ -75,18 +76,57 @@ static void PreSleep(void) {
 }
 
 static void OnWakeUp(void) {
-    DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: On WakeUp called\n");
+    APP_MAIN_DBG("On WakeUp called\n");
     ZTIMER_vWake();
-    vAppApiRestoreMacSettings();
-    POLL_Start(&POLL_REGULAR_CONFIG);
-    if (POWER_GetIoWakeStatus() & g_u32ButtonsInterruptMask) {
-        DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Button pressed: %08x\n", POWER_GetIoWakeStatus());
-        ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
+
+    if (device_config.bIsJoined) {
+        vAppApiRestoreMacSettings();
+        ZPS_eAplAfSendKeepAlive();
+        ZCLTick_Start();
+        POLL_Start(&POLL_REGULAR_CONFIG);
+        if (POWER_GetIoWakeStatus() & g_u32ButtonsInterruptMask) {
+            DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Button pressed: %08x\n", POWER_GetIoWakeStatus());
+            ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
+        }
     }
 }
 
 static void WakeCallBack(void) {
-    DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Wake callback called\n");
+    APP_MAIN_DBG("Wake callback called\n");
+}
+
+static void vAttemptToSleep(void) {
+    if (!POLL_IsSleepAllowed()) {
+        return;
+    }
+
+    uint16_t u16Activities = mLPMFlag;
+    if (POLL_IsRunning() && u16Activities > 0)
+        u16Activities--;
+
+    if (ZCLTick_IsRunning() && u16Activities > 0)
+        u16Activities--;
+
+    if (u16Activities == 0) {
+        POLL_Stop();
+        ZCLTick_Stop();
+
+        PWR_vWakeUpConfig(g_u32ButtonsInterruptMask);
+        if (!device_config.bIsJoined) {
+            APP_MAIN_DBG("Device is not in network. Going to deep sleep\n");
+            (void)PWR_ChangeDeepSleepMode(PWR_E_SLEEP_OSCOFF_RAMOFF);
+            PWR_Init();
+            PWR_vForceRadioRetention(FALSE);
+        } else {
+            (void)PWR_ChangeDeepSleepMode(PWR_E_SLEEP_OSCON_RAMON);
+            PWR_Init();
+            PWR_vForceRadioRetention(FALSE);
+            PWR_teStatus eStatus = PWR_eRemoveActivity(&sWake);
+            APP_MAIN_DBG("PWR_eRemoveActivity status: %d\n", eStatus);
+            eStatus = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
+            APP_MAIN_DBG("PWR_eScheduleActivity status: %d\n", eStatus);
+        }
+    }
 }
 
 static void EnterMainLoop(void) {
@@ -94,18 +134,8 @@ static void EnterMainLoop(void) {
         zps_taskZPS();
         bdb_taskBDB();
         ZTIMER_vTask();
-        // TODO: process app queues
-
         WWDT_Refresh(WWDT);
-
-        // TODO: enter low power based on the timers
-        PWR_eRemoveActivity(&sWake);
-        // PWR_teStatus eStatus = PWR_eRemoveActivity(&sWake);
-        // DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eRemoveActivity status: %d\n", eStatus);
-        PWR_vWakeUpConfig(g_u32ButtonsInterruptMask);
-        PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
-        // eStatus = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
-        // DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: PWR_eScheduleActivity status: %d\n", eStatus);
+        vAttemptToSleep();
         PWR_EnterLowPower();
     }
 }
