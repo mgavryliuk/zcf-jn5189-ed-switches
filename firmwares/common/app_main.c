@@ -80,6 +80,7 @@ static void OnWakeUp(void) {
     ZTIMER_vWake();
 
     if (device_config.bIsJoined) {
+        // TODO: update battery measurments on each X wakeup
         vAppApiRestoreMacSettings();
         ZPS_eAplAfSendKeepAlive();
         ZCLTick_Start();

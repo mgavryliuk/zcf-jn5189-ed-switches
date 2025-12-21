@@ -9,10 +9,15 @@ static void BUTTONS_ScanCallback(void* pvParam);
 static void BUTTONS_GINTCallback(void);
 static void BUTTONS_ResetState(ButtonState_t* buttonState);
 static void BUTTONS_HandleButtonState(ButtonWithState_t* buttonWithState, uint32_t dioState);
-static void BUTTONS_HandleResetState(uint32_t dioState);
+static void BUTTONS_HandleResetButtonState(uint32_t dioState);
+static void BUTTONS_HandleToogle(ButtonWithState_t* buttonWithState);
+static void BUTTONS_HandleMomentaryOnOff(ButtonWithState_t* buttonWithState);
+static void BUTTONS_HandleMultistate(ButtonWithState_t* buttonWithState);
+static inline void BUTTONS_IncrementCycles(ButtonState_t* buttonState);
 
-static uint8_t u16ButtonIdleCycles = 0;
+static uint8_t u8ButtonIdleCycles = 0;
 static ResetButtonWithState_t sResetButtonState;
+static ButtonMode_t eButtonMode;
 
 uint8_t g_u8ButtonScanTimerID;
 
@@ -41,10 +46,25 @@ void BUTTONS_SW_Init(void) {
     BUTTON_DBG("Init timers finished!\n");
     for (uint8_t i = 0; i < g_numButtons; i++) {
         g_asButtonsStates[i].pButton = &g_asButtons[i];
+        g_asButtonsStates->sButtonState.bPressed = FALSE;
         BUTTONS_ResetState(&g_asButtonsStates[i].sButtonState);
     }
     sResetButtonState.pButton = &g_sResetButton;
+    sResetButtonState.sButtonState.bPressed = FALSE;
     BUTTONS_ResetState(&sResetButtonState.sButtonState);
+}
+
+void BUTTONS_SetMode(ButtonMode_t eMode) {
+    if (eButtonMode == eMode) {
+        BUTTON_DBG("Button mode is already %d. Doing nothing\n", eButtonMode);
+        return;
+    }
+
+    BUTTON_DBG("Changing button mode %d -> %d\n", eButtonMode, eMode);
+    eButtonMode = eMode;
+    for (uint8_t i = 0; i < g_numButtons; i++) {
+        BUTTONS_ResetState(&g_asButtonsStates[i].sButtonState);
+    }
 }
 
 static void BUTTONS_ScanCallback(void* pvParam) {
@@ -58,17 +78,17 @@ static void BUTTONS_ScanCallback(void* pvParam) {
         bAnyBtnPressed |= g_asButtonsStates[i].sButtonState.bPressed;
     }
 
-    BUTTONS_HandleResetState(u32DIOState);
+    BUTTONS_HandleResetButtonState(u32DIOState);
     bAnyBtnPressed |= sResetButtonState.sButtonState.bPressed;
 
     if (bAnyBtnPressed) {
-        u16ButtonIdleCycles = 0;
+        u8ButtonIdleCycles = 0;
     } else {
-        u16ButtonIdleCycles++;
+        u8ButtonIdleCycles++;
     }
 
-    if (u16ButtonIdleCycles == BUTTONS_IDLE_CYCLES_MAX) {
-        u16ButtonIdleCycles = 0;
+    if (u8ButtonIdleCycles == BUTTONS_IDLE_CYCLES_MAX) {
+        u8ButtonIdleCycles = 0;
         BUTTON_DBG("IDLE cycles achieved. Stopping scan...\n");
         GINT_EnableCallback(GINT0);
         for (i = 0; i < g_numButtons; i++) {
@@ -87,8 +107,7 @@ static void BUTTONS_GINTCallback(void) {
 
 static void BUTTONS_ResetState(ButtonState_t* buttonState) {
     buttonState->eClickState = BTN_CLICK_IDLE;
-    buttonState->bPressed = FALSE;
-    buttonState->u16PressedCycles = 0;
+    buttonState->u16StateCycles = 0;
     buttonState->u8Debounce = BUTTONS_DEBOUNCE_MASK;
 }
 
@@ -100,27 +119,31 @@ static void BUTTONS_HandleButtonState(ButtonWithState_t* buttonWithState, uint32
     buttonState->u8Debounce |= ((dioState & button->u32DioMask) ? 1 : 0);
     buttonState->u8Debounce &= BUTTONS_DEBOUNCE_MASK;
 
-    switch (buttonState->u8Debounce) {
-        case 0:
-            if (!buttonState->bPressed) {
-                BUTTON_DBG("Button for endpoint `%d` - PRESSED\n", button->u16Endpoint);
-                buttonState->bPressed = TRUE;
-                if (g_sButtonsCallbacks.pfOnPressCallback && button->pvLedConfig) {
-                    g_sButtonsCallbacks.pfOnPressCallback(button->pvLedConfig);
-                }
-            }
-            buttonState->u16PressedCycles++;
+    if (buttonState->u8Debounce == 0 && !buttonState->bPressed) {
+        BUTTON_DBG("Button for endpoint `%d` - PRESSED. Calling onPressCallback if available\n", button->u16Endpoint);
+        if (g_sButtonsCallbacks.pfOnPressCallback && button->pvLedConfig) {
+            g_sButtonsCallbacks.pfOnPressCallback(button->pvLedConfig);
+        }
+    }
 
+    switch (eButtonMode) {
+        case BUTTON_MODE_TOGGLE:
+            BUTTONS_HandleToogle(buttonWithState);
             break;
-        case BUTTONS_DEBOUNCE_MASK:
-            if (buttonState->bPressed) {
-                BUTTON_DBG("Button for endpoint `%d` - RELEASED\n", button->u16Endpoint);
-                BUTTONS_ResetState(buttonState);
-            }
+
+        case BUTTON_MODE_MOMENTARY_ON_OFF:
+            BUTTONS_HandleMomentaryOnOff(buttonWithState);
+            break;
+
+        case BUTTON_MODE_MULTISTATE_INPUT:
+            BUTTONS_HandleMultistate(buttonWithState);
+            break;
+        default:
+            break;
     }
 }
 
-static void BUTTONS_HandleResetState(uint32_t dioState) {
+static void BUTTONS_HandleResetButtonState(uint32_t dioState) {
     const ResetButton_t* resetButton = sResetButtonState.pButton;
     ButtonState_t* buttonState = &sResetButtonState.sButtonState;
 
@@ -130,6 +153,7 @@ static void BUTTONS_HandleResetState(uint32_t dioState) {
 
     switch (buttonState->u8Debounce) {
         case 0:
+            BUTTONS_IncrementCycles(buttonState);
             if (!buttonState->bPressed) {
                 BUTTON_DBG("Reset device combination pressed. Reset mask: %x\n", resetButton->u32DioMask);
                 buttonState->bPressed = TRUE;
@@ -138,8 +162,7 @@ static void BUTTONS_HandleResetState(uint32_t dioState) {
                 }
             }
 
-            buttonState->u16PressedCycles++;
-            if (buttonState->u16PressedCycles == BUTTONS_RESET_DEVICE_CYCLES) {
+            if (buttonState->u16StateCycles == BUTTONS_RESET_DEVICE_CYCLES) {
                 BUTTON_DBG("Reset device combination pressed. \n");
                 if (g_sButtonsCallbacks.pfOnResetCallback) {
                     g_sButtonsCallbacks.pfOnResetCallback();
@@ -149,9 +172,104 @@ static void BUTTONS_HandleResetState(uint32_t dioState) {
 
         case BUTTONS_DEBOUNCE_MASK:
             if (buttonState->bPressed) {
+                buttonState->bPressed = FALSE;
                 BUTTON_DBG("Reset device combination released\n");
                 BUTTONS_ResetState(buttonState);
             }
             break;
+    }
+}
+
+static void BUTTONS_HandleToogle(ButtonWithState_t* buttonWithState) {
+    const Button_t* button = buttonWithState->pButton;
+    ButtonState_t* buttonState = &buttonWithState->sButtonState;
+
+    if (buttonState->u8Debounce == 0 && !buttonState->bPressed) {
+        BUTTON_DBG("Button for endpoint `%d` - PRESSED\n", button->u16Endpoint);
+        buttonState->bPressed = TRUE;
+        // TODO: send zigbee event
+    } else if (buttonState->u8Debounce == BUTTONS_DEBOUNCE_MASK && buttonState->bPressed) {
+        BUTTON_DBG("Button for endpoint `%d` - RELEASED\n", button->u16Endpoint);
+        buttonState->bPressed = FALSE;
+        BUTTONS_ResetState(buttonState);
+    }
+}
+
+static void BUTTONS_HandleMomentaryOnOff(ButtonWithState_t* buttonWithState) {
+    const Button_t* button = buttonWithState->pButton;
+    ButtonState_t* buttonState = &buttonWithState->sButtonState;
+    if (buttonState->u8Debounce == 0 && !buttonState->bPressed) {
+        BUTTON_DBG("Button for endpoint `%d` - PRESSED\n", button->u16Endpoint);
+        buttonState->bPressed = TRUE;
+        // TODO: send zigbee momentary pressed event
+
+    } else if (buttonState->u8Debounce == BUTTONS_DEBOUNCE_MASK && buttonState->bPressed) {
+        BUTTON_DBG("Button for endpoint `%d` - RELEASED\n", button->u16Endpoint);
+        buttonState->bPressed = FALSE;
+        BUTTONS_ResetState(buttonState);
+        // TODO: send zigbee momentary release event
+    }
+}
+
+static void BUTTONS_HandleMultistate(ButtonWithState_t* buttonWithState) {
+    const Button_t* button = buttonWithState->pButton;
+    ButtonState_t* buttonState = &buttonWithState->sButtonState;
+
+    if (buttonState->u8Debounce == 0) {
+        if (!buttonState->bPressed) {
+            BUTTON_DBG("Button for endpoint `%d` - PRESSED\n", button->u16Endpoint);
+            buttonState->bPressed = TRUE;
+            buttonState->u16StateCycles = 0;
+            /* BTN_CLICK_IDLE -> BTN_CLICK_SINGLE -> BTN_CLICK_DOUBLE -> BTN_CLICK_TRIPLE */
+            if (buttonState->eClickState < BTN_CLICK_TRIPLE) {
+                buttonState->eClickState++;
+                BUTTON_DBG("Changed state to %d\n", buttonState->eClickState);
+            }
+        }
+        BUTTONS_IncrementCycles(buttonState);
+
+        /* Long press detection */
+        if (buttonState->u16StateCycles == BUTTONS_LONG_PRESS_REGISTER_CYCLES && buttonState->eClickState == BTN_CLICK_SINGLE) {
+            buttonState->eClickState = BTN_CLICK_LONG;
+            BUTTON_DBG("Long press detected: %d\n", buttonState->eClickState);
+            // TODO: send long press event
+        }
+
+        /* Emit press event for 2 and 3 presses */
+        if (buttonState->u16StateCycles == BUTTONS_REGISTER_WINDOW_CYCLES && buttonState->eClickState >= BTN_CLICK_DOUBLE &&
+            buttonState->eClickState <= BTN_CLICK_TRIPLE) {
+            BUTTON_DBG("Multi-click on press detected: %d\n", buttonState->eClickState);
+            BUTTONS_ResetState(buttonState);
+            // TODO: send multiclick event
+        }
+
+    } else if (buttonState->u8Debounce == BUTTONS_DEBOUNCE_MASK) {
+        if (buttonState->bPressed) {
+            BUTTON_DBG("Button for endpoint `%d` - RELEASED\n", button->u16Endpoint);
+            buttonState->bPressed = FALSE;
+        }
+        BUTTONS_IncrementCycles(buttonState);
+
+        if (buttonState->eClickState >= BTN_CLICK_SINGLE && buttonState->eClickState <= BTN_CLICK_TRIPLE) {
+            if (buttonState->u16StateCycles == BUTTONS_REGISTER_WINDOW_CYCLES) {
+                BUTTON_DBG("Multi-click on release detected: %d\n", buttonState->eClickState);
+                BUTTONS_ResetState(buttonState);
+                // TODO: send multiclick event
+            }
+
+            if (buttonState->eClickState == BTN_CLICK_LONG) {
+                // TODO: send release action
+                BUTTON_DBG("Long release detected: %d\n", buttonState->eClickState);
+                BUTTONS_ResetState(buttonState);
+            }
+        }
+    }
+}
+
+static inline void BUTTONS_IncrementCycles(ButtonState_t* buttonState) {
+    if (buttonState->u16StateCycles < UINT16_MAX) {
+        buttonState->u16StateCycles++;
+    } else {
+        buttonState->u16StateCycles = UINT16_MAX;
     }
 }

@@ -4,7 +4,7 @@
 #include "zps_apl_zdo.h"
 
 const PollingConfig_t POLL_COMMISIONING_CONFIG = {.eMode = POLL_COMMISIONING, .u16IntervalMs = 200, .u8MaxAttempts = 100};
-const PollingConfig_t POLL_FAST_CONFIG = {.eMode = POLL_FAST, .u16IntervalMs = 200, .u8MaxAttempts = 10};
+const PollingConfig_t POLL_FAST_CONFIG = {.eMode = POLL_FAST, .u16IntervalMs = 200, .u8MaxAttempts = 5};
 const PollingConfig_t POLL_REGULAR_CONFIG = {.eMode = POLL_REGULAR, .u16IntervalMs = 1000, .u8MaxAttempts = 3};
 
 static void POLL_Callback(void* ctx);

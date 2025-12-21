@@ -24,11 +24,14 @@ typedef enum {
     E_CLD_PREVENT_RESET_ATTR_ID_MODE_TYPE = 0x0001,
 } teCLD_Configuration_Attr;
 
+// Must match ButtonMode_t in app_buttons.h
 typedef enum {
-    E_CLD_BUTTON_MODE_TOGGLE,
-    E_CLD_BUTTON_MODE_MOMENTARY_ON_OFF,
-    E_CLD_BUTTON_MODE_MULTISTATE_INPUT,
+    E_CLD_BUTTON_MODE_TOGGLE = 0,
+    E_CLD_BUTTON_MODE_MOMENTARY_ON_OFF = 1,
+    E_CLD_BUTTON_MODE_MULTISTATE_INPUT = 2,
 } teCLD_ButtonMode;
+
+typedef void (*ConfigClusterModeChangedCallback)(teCLD_ButtonMode eMode);
 
 typedef struct {
     zenum8 eButtonMode;
@@ -42,6 +45,7 @@ teZCL_Status eCLD_ConfigurationCreateConfiguration(tsZCL_ClusterInstance* psClus
 extern tsZCL_ClusterDefinition sCLD_Configuration;
 extern uint8 au8ConfigurationAttributeControlBits[];
 extern const tsZCL_AttributeDefinition asCLD_ConfigurationClusterAttributeDefinitions[];
+extern const ConfigClusterModeChangedCallback g_cbZCLModeChanged;
 
 void CONFIGURATION_CLUSTER_HandleAttrsRange(tsZCL_CallBackEvent* psEvent);
 void CONFIGURATION_CLUSTER_HandleAttrsWrite(tsZCL_CallBackEvent* psEvent, tsCLD_Configuration* sConfigCluster);

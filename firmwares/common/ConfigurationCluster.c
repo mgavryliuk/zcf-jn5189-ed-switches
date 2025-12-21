@@ -56,7 +56,8 @@ void CONFIGURATION_CLUSTER_HandleAttrsWrite(tsZCL_CallBackEvent* psEvent, tsCLD_
                     CONFIG_CLUSTER_DBG("Invalid Mode value: %d\n", mode);
                 } else {
                     sConfigCluster->eButtonMode = mode;
-                    // TODO: think on buttons state reset
+                    if (g_cbZCLModeChanged)
+                        g_cbZCLModeChanged(mode);
                     CONFIGURATION_CLUSTER_SavePDMRecord(sConfigCluster);
                 }
             } else if (attrId == E_CLD_PREVENT_RESET_ATTR_ID_MODE_TYPE) {
@@ -88,6 +89,8 @@ static void CONFIGURATION_CLUSTER_LoadPDMRecord(tsCLD_Configuration* sConfigClus
         CONFIG_CLUSTER_DBG("Loading ConfigurationCluster attributes from PDM\n");
         PDM_eReadDataFromRecord(PDM_ID_CONFIGURATION_CLUSTER, sConfigCluster, sizeof(tsCLD_Configuration), &u16ByteRead);
         CONFIG_CLUSTER_DBG("Button Mode: %d. Prevent Reset: %d\n", sConfigCluster->eButtonMode, sConfigCluster->bPreventReset);
+        if (g_cbZCLModeChanged)
+            g_cbZCLModeChanged(sConfigCluster->eButtonMode);
     }
 }
 

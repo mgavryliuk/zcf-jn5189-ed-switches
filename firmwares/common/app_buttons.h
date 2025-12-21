@@ -27,6 +27,12 @@ typedef void (*ButtonHandler_cb_t)(void* ctx);
 typedef void (*ButtonResetHandler_cb_t)(void);
 
 typedef enum {
+    BUTTON_MODE_TOGGLE = 0,
+    BUTTON_MODE_MOMENTARY_ON_OFF = 1,
+    BUTTON_MODE_MULTISTATE_INPUT = 2,
+} ButtonMode_t;
+
+typedef enum {
     BTN_CLICK_IDLE = 0,
     BTN_CLICK_SINGLE,
     BTN_CLICK_DOUBLE,
@@ -42,7 +48,7 @@ typedef struct {
 typedef struct {
     ButtonClickState_t eClickState;
     bool_t bPressed;
-    uint16_t u16PressedCycles;
+    uint16_t u16StateCycles;
     uint8_t u8Debounce;
 } ButtonState_t;
 
@@ -81,5 +87,6 @@ extern ButtonWithState_t g_asButtonsStates[];
 
 void BUTTONS_HW_Init(void);
 void BUTTONS_SW_Init(void);
+void BUTTONS_SetMode(ButtonMode_t eMode);
 
 #endif /* APP_BUTTONS_H */
