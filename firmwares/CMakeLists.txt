@@ -258,6 +258,8 @@ set(SDK_SRC
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/PowerConfiguration.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/OnOff.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/OnOffCommandHandler.c
+    ${SDK_PREFIX}/middleware/wireless/zigbee/ZCL/Clusters/General/Source/OnOffCommands.c
+    
 
     ${SDK_PREFIX}/middleware/wireless/zigbee/platform/K32W0/platform/timer.c
     ${SDK_PREFIX}/middleware/wireless/zigbee/platform/K32W0/platform/crypto.c
@@ -310,7 +312,6 @@ target_compile_definitions(${APP_TARGET} PRIVATE
     DEBUG_APP_WWDT
     DEBUG_APP_MAIN
     DEBUG_APP_BATTERY
-    DEBUG_APP_EVENTS
     
     DEBUG_BASIC_EP
     DEBUG_CONFIGURATION_CLUSTER
@@ -320,6 +321,7 @@ target_compile_definitions(${APP_TARGET} PRIVATE
     DEBUG_REPORTING
     DEBUG_NODE
     DEBUG_ZCL_TICK
+    DEBUG_COMMON
 )
 
 target_link_libraries(${APP_TARGET}

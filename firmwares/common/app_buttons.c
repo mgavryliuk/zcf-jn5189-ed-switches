@@ -14,6 +14,8 @@ static void BUTTONS_HandleToogle(ButtonWithState_t* buttonWithState);
 static void BUTTONS_HandleMomentaryOnOff(ButtonWithState_t* buttonWithState);
 static void BUTTONS_HandleMultistate(ButtonWithState_t* buttonWithState);
 static inline void BUTTONS_IncrementCycles(ButtonState_t* buttonState);
+static inline void BUTTONS_SendEvent(ButtonEvent_t eButtonEvent, uint8_t u8Endpoint);
+static inline ButtonEvent_t BUTTONS_MultiStateToEvent(ButtonClickState_t eClickState);
 
 static uint8_t u8ButtonIdleCycles = 0;
 static ResetButtonWithState_t sResetButtonState;
@@ -120,7 +122,7 @@ static void BUTTONS_HandleButtonState(ButtonWithState_t* buttonWithState, uint32
     buttonState->u8Debounce &= BUTTONS_DEBOUNCE_MASK;
 
     if (buttonState->u8Debounce == 0 && !buttonState->bPressed) {
-        BUTTON_DBG("Button for endpoint `%d` - PRESSED. Calling onPressCallback if available\n", button->u16Endpoint);
+        BUTTON_DBG("Button for endpoint `%d` - PRESSED. Calling onPressCallback if available\n", button->u8Endpoint);
         if (g_sButtonsCallbacks.pfOnPressCallback && button->pvLedConfig) {
             g_sButtonsCallbacks.pfOnPressCallback(button->pvLedConfig);
         }
@@ -185,11 +187,11 @@ static void BUTTONS_HandleToogle(ButtonWithState_t* buttonWithState) {
     ButtonState_t* buttonState = &buttonWithState->sButtonState;
 
     if (buttonState->u8Debounce == 0 && !buttonState->bPressed) {
-        BUTTON_DBG("Button for endpoint `%d` - PRESSED\n", button->u16Endpoint);
+        BUTTON_DBG("Button for endpoint `%d` - PRESSED\n", button->u8Endpoint);
         buttonState->bPressed = TRUE;
-        // TODO: send zigbee event
+        BUTTONS_SendEvent(BTN_TOGGLE_EVENT, button->u8Endpoint);
     } else if (buttonState->u8Debounce == BUTTONS_DEBOUNCE_MASK && buttonState->bPressed) {
-        BUTTON_DBG("Button for endpoint `%d` - RELEASED\n", button->u16Endpoint);
+        BUTTON_DBG("Button for endpoint `%d` - RELEASED\n", button->u8Endpoint);
         buttonState->bPressed = FALSE;
         BUTTONS_ResetState(buttonState);
     }
@@ -199,15 +201,15 @@ static void BUTTONS_HandleMomentaryOnOff(ButtonWithState_t* buttonWithState) {
     const Button_t* button = buttonWithState->pButton;
     ButtonState_t* buttonState = &buttonWithState->sButtonState;
     if (buttonState->u8Debounce == 0 && !buttonState->bPressed) {
-        BUTTON_DBG("Button for endpoint `%d` - PRESSED\n", button->u16Endpoint);
+        BUTTON_DBG("Button for endpoint `%d` - PRESSED\n", button->u8Endpoint);
         buttonState->bPressed = TRUE;
-        // TODO: send zigbee momentary pressed event
+        BUTTONS_SendEvent(BTN_MOMENTARY_PRESSED_EVENT, button->u8Endpoint);
 
     } else if (buttonState->u8Debounce == BUTTONS_DEBOUNCE_MASK && buttonState->bPressed) {
-        BUTTON_DBG("Button for endpoint `%d` - RELEASED\n", button->u16Endpoint);
+        BUTTON_DBG("Button for endpoint `%d` - RELEASED\n", button->u8Endpoint);
         buttonState->bPressed = FALSE;
+        BUTTONS_SendEvent(BTN_MOMENTARY_RELEASED_EVENT, button->u8Endpoint);
         BUTTONS_ResetState(buttonState);
-        // TODO: send zigbee momentary release event
     }
 }
 
@@ -217,11 +219,11 @@ static void BUTTONS_HandleMultistate(ButtonWithState_t* buttonWithState) {
 
     if (buttonState->u8Debounce == 0) {
         if (!buttonState->bPressed) {
-            BUTTON_DBG("Button for endpoint `%d` - PRESSED\n", button->u16Endpoint);
+            BUTTON_DBG("Button for endpoint `%d` - PRESSED\n", button->u8Endpoint);
             buttonState->bPressed = TRUE;
-            buttonState->u16StateCycles = 0;
             /* BTN_CLICK_IDLE -> BTN_CLICK_SINGLE -> BTN_CLICK_DOUBLE -> BTN_CLICK_TRIPLE */
             if (buttonState->eClickState < BTN_CLICK_TRIPLE) {
+                buttonState->u16StateCycles = 0;
                 buttonState->eClickState++;
                 BUTTON_DBG("Changed state to %d\n", buttonState->eClickState);
             }
@@ -232,34 +234,38 @@ static void BUTTONS_HandleMultistate(ButtonWithState_t* buttonWithState) {
         if (buttonState->u16StateCycles == BUTTONS_LONG_PRESS_REGISTER_CYCLES && buttonState->eClickState == BTN_CLICK_SINGLE) {
             buttonState->eClickState = BTN_CLICK_LONG;
             BUTTON_DBG("Long press detected: %d\n", buttonState->eClickState);
-            // TODO: send long press event
+            BUTTONS_SendEvent(BTN_LONG_PRESSED_EVENT, button->u8Endpoint);
+            return;
         }
 
         /* Emit press event for 2 and 3 presses */
         if (buttonState->u16StateCycles == BUTTONS_REGISTER_WINDOW_CYCLES && buttonState->eClickState >= BTN_CLICK_DOUBLE &&
             buttonState->eClickState <= BTN_CLICK_TRIPLE) {
             BUTTON_DBG("Multi-click on press detected: %d\n", buttonState->eClickState);
+            ButtonEvent_t eButtonEvent = BUTTONS_MultiStateToEvent(buttonState->eClickState);
+            if (eButtonEvent != BTN_LONG_EMPTY_EVENT)
+                BUTTONS_SendEvent(eButtonEvent, button->u8Endpoint);
             BUTTONS_ResetState(buttonState);
-            // TODO: send multiclick event
         }
 
     } else if (buttonState->u8Debounce == BUTTONS_DEBOUNCE_MASK) {
         if (buttonState->bPressed) {
-            BUTTON_DBG("Button for endpoint `%d` - RELEASED\n", button->u16Endpoint);
+            BUTTON_DBG("Button for endpoint `%d` - RELEASED\n", button->u8Endpoint);
             buttonState->bPressed = FALSE;
         }
         BUTTONS_IncrementCycles(buttonState);
 
+        if (buttonState->eClickState == BTN_CLICK_LONG) {
+            BUTTONS_SendEvent(BTN_LONG_RELEASED_EVENT, button->u8Endpoint);
+            BUTTON_DBG("Long release detected: %d\n", buttonState->eClickState);
+            BUTTONS_ResetState(buttonState);
+            return;
+        }
+
         if (buttonState->eClickState >= BTN_CLICK_SINGLE && buttonState->eClickState <= BTN_CLICK_TRIPLE) {
             if (buttonState->u16StateCycles == BUTTONS_REGISTER_WINDOW_CYCLES) {
                 BUTTON_DBG("Multi-click on release detected: %d\n", buttonState->eClickState);
-                BUTTONS_ResetState(buttonState);
-                // TODO: send multiclick event
-            }
-
-            if (buttonState->eClickState == BTN_CLICK_LONG) {
-                // TODO: send release action
-                BUTTON_DBG("Long release detected: %d\n", buttonState->eClickState);
+                BUTTONS_SendEvent(BUTTONS_MultiStateToEvent(buttonState->eClickState), button->u8Endpoint);
                 BUTTONS_ResetState(buttonState);
             }
         }
@@ -272,4 +278,20 @@ static inline void BUTTONS_IncrementCycles(ButtonState_t* buttonState) {
     } else {
         buttonState->u16StateCycles = UINT16_MAX;
     }
+}
+
+static inline void BUTTONS_SendEvent(ButtonEvent_t eButtonEvent, uint8_t u8Endpoint) {
+    if (g_sButtonsCallbacks.pfOnPressEventCallback) {
+        g_sButtonsCallbacks.pfOnPressEventCallback(eButtonEvent, u8Endpoint);
+    }
+}
+
+static inline ButtonEvent_t BUTTONS_MultiStateToEvent(ButtonClickState_t eClickState) {
+    if (eClickState == BTN_CLICK_SINGLE)
+        return BTN_SINGLE_CLICK_EVENT;
+    else if (eClickState == BTN_CLICK_DOUBLE)
+        return BTN_DOUBLE_CLICK_EVENT;
+    else if (eClickState == BTN_CLICK_TRIPLE)
+        return BTN_TRIPLE_CLICK_EVENT;
+    return BTN_LONG_EMPTY_EVENT;
 }

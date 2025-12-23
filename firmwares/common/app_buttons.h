@@ -23,9 +23,6 @@
 // 100 * BUTTON_SCAN_TIME_MSEC = 1sec
 #define BUTTONS_IDLE_CYCLES_MAX (100)
 
-typedef void (*ButtonHandler_cb_t)(void* ctx);
-typedef void (*ButtonResetHandler_cb_t)(void);
-
 typedef enum {
     BUTTON_MODE_TOGGLE = 0,
     BUTTON_MODE_MOMENTARY_ON_OFF = 1,
@@ -34,15 +31,32 @@ typedef enum {
 
 typedef enum {
     BTN_CLICK_IDLE = 0,
-    BTN_CLICK_SINGLE,
-    BTN_CLICK_DOUBLE,
-    BTN_CLICK_TRIPLE,
-    BTN_CLICK_LONG,
+    BTN_CLICK_SINGLE = 1,
+    BTN_CLICK_DOUBLE = 2,
+    BTN_CLICK_TRIPLE = 3,
+    BTN_CLICK_LONG = 4,
 } ButtonClickState_t;
+
+typedef enum {
+    BTN_TOGGLE_EVENT,
+    BTN_MOMENTARY_PRESSED_EVENT,
+    BTN_MOMENTARY_RELEASED_EVENT,
+    BTN_SINGLE_CLICK_EVENT,
+    BTN_DOUBLE_CLICK_EVENT,
+    BTN_TRIPLE_CLICK_EVENT,
+    BTN_LONG_PRESSED_EVENT,
+    BTN_LONG_RELEASED_EVENT,
+    BTN_LONG_EMPTY_EVENT,
+} ButtonEvent_t;
+
+typedef void (*ButtonHandler_cb_t)(void* ctx);
+typedef void (*ButtonResetHandler_cb_t)(void);
+typedef void (*ButtonPressEvent_cb_t)(ButtonEvent_t eButtonEvent, uint8_t u8Endpoint);
 
 typedef struct {
     ButtonHandler_cb_t pfOnPressCallback;
     ButtonResetHandler_cb_t pfOnResetCallback;
+    ButtonPressEvent_cb_t pfOnPressEventCallback;
 } ButtonCallbacks_t;
 
 typedef struct {
@@ -55,7 +69,7 @@ typedef struct {
 typedef struct {
     const uint32_t u32DioMask;
     void* const pvLedConfig;
-    const uint16_t u16Endpoint;
+    const uint8_t u8Endpoint;
 } Button_t;
 
 typedef struct {

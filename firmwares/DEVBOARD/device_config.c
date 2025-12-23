@@ -21,12 +21,12 @@ const uint32_t g_u32ButtonsInterruptMask = BTN_INTERRUPT_MASK;
 const size_t g_numButtons = BUTTONS_AMOUNT;
 const Button_t g_asButtons[] = {
     {
-        .u16Endpoint = DEVBOARD_LEFTBUTTON_ENDPOINT,
+        .u8Endpoint = DEVBOARD_LEFTBUTTON_ENDPOINT,
         .u32DioMask = BTN_LEFT_MASK,
         .pvLedConfig = &leftLedConfig,
     },
     {
-        .u16Endpoint = DEVBOARD_RIGHTBUTTON_ENDPOINT,
+        .u8Endpoint = DEVBOARD_RIGHTBUTTON_ENDPOINT,
         .u32DioMask = BTN_RIGHT_MASK,
         .pvLedConfig = &rightLedConfig,
     },
