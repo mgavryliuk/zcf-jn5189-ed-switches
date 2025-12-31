@@ -11,7 +11,6 @@ set(JENNIC_STACK "MAC")
 set(JENNIC_MAC "MiniMac")
 
 set(SDK_PREFIX ${PROJECT_SOURCE_DIR}/sdk)
-# set(SDK_LINKER_SCRIPT_DIR "${SDK_PREFIX}/middleware/wireless/zigbee/Library")
 set(SDK_LINKER_SCRIPT_DIR "${SDK_PREFIX}/middleware/wireless/zigbee/platform/K32W0/libs")
 set(ZPS_CONFIG "${PROJECT_SOURCE_DIR}/tools/ZPSConfig.py")
 set(PDUM_CONFIG "${PROJECT_SOURCE_DIR}/tools/PDUMConfig.py")
@@ -46,7 +45,7 @@ add_compile_definitions(
     SUPPORT_FOR_15_4=1
     FSL_CLOCK_SET_LDO_CALLED_INTERNALLY
 
-    DBG_ENABLE
+    # DBG_ENABLE
     # DEBUG_BDB
     BUILD_DATE="${BUILD_DATE}"
     BUILD_NUMBER="${BUILD_NUMBER}"
@@ -309,19 +308,19 @@ set(APP_SRC
 add_executable(${APP_TARGET} ${APP_SRC})
 
 target_compile_definitions(${APP_TARGET} PRIVATE
-    DEBUG_APP_WWDT
-    DEBUG_APP_MAIN
-    DEBUG_APP_BATTERY
+    # DEBUG_APP_WWDT
+    # DEBUG_APP_MAIN
+    # DEBUG_APP_BATTERY
     
-    DEBUG_BASIC_EP
-    DEBUG_CONFIGURATION_CLUSTER
-    DEBUG_ON_OFF_EP
-    DEBUG_POLLING
-    DEBUG_BUTTONS
-    DEBUG_REPORTING
-    DEBUG_NODE
-    DEBUG_ZCL_TICK
-    DEBUG_COMMON
+    # DEBUG_BASIC_EP
+    # DEBUG_CONFIGURATION_CLUSTER
+    # DEBUG_ON_OFF_EP
+    # DEBUG_POLLING
+    # DEBUG_BUTTONS
+    # DEBUG_REPORTING
+    # DEBUG_NODE
+    # DEBUG_ZCL_TICK
+    # DEBUG_COMMON
 )
 
 target_link_libraries(${APP_TARGET}

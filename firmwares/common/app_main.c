@@ -34,6 +34,8 @@ extern uint8_t mLPMFlag;
 static PWR_tsWakeTimerEvent sWake;
 static ZTIMER_tsTimer asTimers[ZTIMER_STORAGE];
 
+static uint8_t u8WakeCounter = 0;
+
 void vAppRegisterPWRCallbacks(void) {
     PWR_RegisterLowPowerEnterCallback(PreSleep);
     PWR_RegisterLowPowerExitCallback(OnWakeUp);
@@ -59,8 +61,6 @@ void main_task(uint32_t parameter) {
         .pfOnNWKSteeringStopCallback = LEDS_BlinkDuringNetworkSetup_Stop,
     };
     ZB_NODE_Init(&zbNodeCallbacks);
-    // Update status also updates cluster, so we should run it after node is configured
-    BATTERY_UpdateStatus();
     ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
     EnterMainLoop();
 }
@@ -80,13 +80,18 @@ static void OnWakeUp(void) {
     ZTIMER_vWake();
 
     if (device_config.bIsJoined) {
-        // TODO: update battery measurments on each X wakeup
         vAppApiRestoreMacSettings();
         ZPS_eAplAfSendKeepAlive();
         ZCLTick_Start();
         POLL_Start(&POLL_REGULAR_CONFIG);
+
+        if (u8WakeCounter == 0) {
+            BATTERY_UpdateStatus();
+        }
+        u8WakeCounter = (u8WakeCounter + 1) % BATTERY_REPORT_EVERY_X_WAKEUPS;
+
         if (POWER_GetIoWakeStatus() & g_u32ButtonsInterruptMask) {
-            DBG_vPrintf(TRACE_APP_MAIN, "APP_MAIN: Button pressed: %08x\n", POWER_GetIoWakeStatus());
+            APP_MAIN_DBG("Wake caused by button pressed!\n");
             ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
         }
     }

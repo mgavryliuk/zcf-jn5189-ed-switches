@@ -4,6 +4,7 @@
 #include "MicroSpecific.h"
 #include "PDM.h"
 #include "app_basic_ep.h"
+#include "app_battery.h"
 #include "app_on_off_ep.h"
 #include "app_polling.h"
 #include "app_reporting.h"
@@ -60,14 +61,12 @@ void ZB_NODE_Init(const ZBNodeCallbacks_t* callbacks) {
 }
 
 void APP_vBdbCallback(BDB_tsBdbEvent* psBdbEvent) {
-    ZB_NODE_DBG("APP_vBdbCallback called with event type: %d\n", psBdbEvent->eEventType);
     switch (psBdbEvent->eEventType) {
         case BDB_EVENT_NONE:
             ZB_NODE_DBG("BDB_EVENT_NONE\n");
             break;
 
         case BDB_EVENT_ZPSAF:
-            ZB_NODE_DBG("BDB_EVENT_ZPSAF\n");
             ZB_NODE_HandleAFEvent(&psBdbEvent->uEventData.sZpsAfEvent);
             break;
 
@@ -89,6 +88,7 @@ void APP_vBdbCallback(BDB_tsBdbEvent* psBdbEvent) {
         case BDB_EVENT_REJOIN_SUCCESS:
             ZB_NODE_DBG("BDB_EVENT_REJOIN_SUCCESS\n");
             device_config.bIsJoined = TRUE;
+            BATTERY_UpdateStatus();
             POLL_Start(&POLL_FAST_CONFIG);
             break;
 
@@ -100,6 +100,7 @@ void APP_vBdbCallback(BDB_tsBdbEvent* psBdbEvent) {
             if (ZBNodeCallbacks.pfOnNWKSteeringStopCallback) {
                 ZBNodeCallbacks.pfOnNWKSteeringStopCallback();
             }
+            BATTERY_UpdateStatus();
             break;
 
         case BDB_EVENT_APP_START_POLLING:
@@ -108,6 +109,7 @@ void APP_vBdbCallback(BDB_tsBdbEvent* psBdbEvent) {
             break;
 
         default:
+            ZB_NODE_DBG("APP_vBdbCallback called with event type: %d\n", psBdbEvent->eEventType);
             break;
     }
 }
@@ -214,13 +216,14 @@ static void ZB_NODE_HandleAFEvent(BDB_tsZpsAfEvent* psZpsAfEvent) {
                 break;
 
             case ZPS_EVENT_NWK_POLL_CONFIRM:
-                ZB_NODE_DBG("AF Callback - ZDO endpoint. ZPS_EVENT_NWK_POLL_CONFIRM: %d\n",
-                            psAfEvent->uEvent.sNwkPollConfirmEvent.u8Status);
-                // Switch to fast polling or extend its time if data received
-                if (psAfEvent->uEvent.sNwkPollConfirmEvent.u8Status == 0) {
+                if (device_config.bIsJoined && psAfEvent->uEvent.sNwkPollConfirmEvent.u8Status == 0) {
+                    ZB_NODE_DBG("AF Callback - ZDO endpoint. ZPS_EVENT_NWK_POLL_CONFIRM: %d\n",
+                                psAfEvent->uEvent.sNwkPollConfirmEvent.u8Status);
                     const PollingConfig_t* pollCfg = POLL_GetConfig();
-                    if (pollCfg == &POLL_COMMISIONING_CONFIG)
-                        return;
+                    if (pollCfg == &POLL_COMMISIONING_CONFIG) {
+                        ZB_NODE_DBG("Still commisioning poll\n");
+                        break;
+                    }
 
                     if (pollCfg != &POLL_FAST_CONFIG) {
                         POLL_Start(&POLL_FAST_CONFIG);

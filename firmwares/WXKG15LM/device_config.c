@@ -1,67 +1,46 @@
 #include "device_config.h"
 
-#include "app_leds.h"
 #include "device_definitions.h"
 #include "zps_gen.h"
 
-LedConfig_t leftLedConfig = {.u32DioPin = LED_LEFT_DIO};
-LedConfig_t rightLedConfig = {.u32DioPin = LED_RIGHT_DIO};
-LedConfig_t* const ledsConfigs[LEDS_AMOUNT] = {&leftLedConfig, &rightLedConfig};
+const uint8_t g_asLedsPins[] = {LED_LEFT_DIO, LED_RIGHT_DIO};
+const size_t g_numLedsPins = sizeof(g_asLedsPins) / sizeof(g_asLedsPins[0]);
 
-Button_t leftButton = {
-    .u16Endpoint = WXKG15LM_LEFTBUTTON_ENDPOINT,
-    .u32DioPin = BTN_LEFT_DIO,
-    .u32DioMask = BTN_LEFT_MASK,
+Led_t leftLedConfig = {.u32DioMask = LED_LEFT_MASK};
+Led_t rightLedConfig = {.u32DioMask = LED_RIGHT_MASK};
+const Led_t* const g_asLeds[] = {&leftLedConfig, &rightLedConfig};
+const size_t g_numLeds = sizeof(g_asLeds) / sizeof(g_asLeds[0]);
 
-    .bPressed = FALSE,
-    .u16PressedCycles = 0,
-    .u8Debounce = BUTTON_DEBOUNCE_MASK,
-    .eState = IDLE,
+const Led_t g_sNetworkSetupLed = {.u32DioMask = RESET_LED_MASK};
 
-    .pfOnPressCallback = LEDS_ButtonBlinkCallback,
-    .pvOnPressContext = &leftLedConfig,
+// Buttons configurations
+const size_t g_numButtonsPins = 2;
+const uint32_t g_asButtonsPins[] = {BTN_LEFT_DIO, BTN_RIGHT_DIO};
+
+const uint32_t g_u32ButtonsInterruptMask = BTN_INTERRUPT_MASK;
+const size_t g_numButtons = BUTTONS_AMOUNT;
+const Button_t g_asButtons[] = {
+    {
+        .u8Endpoint = WXKG15LM_LEFTBUTTON_ENDPOINT,
+        .u32DioMask = BTN_LEFT_MASK,
+        .pvLedConfig = &leftLedConfig,
+    },
+    {
+        .u8Endpoint = WXKG15LM_RIGHTBUTTON_ENDPOINT,
+        .u32DioMask = BTN_RIGHT_MASK,
+        .pvLedConfig = &rightLedConfig,
+    },
 };
-Button_t rightButton = {
-    .u16Endpoint = WXKG15LM_RIGHTBUTTON_ENDPOINT,
-    .u32DioPin = BTN_RIGHT_DIO,
-    .u32DioMask = BTN_RIGHT_MASK,
 
-    .bPressed = FALSE,
-    .u16PressedCycles = 0,
-    .u8Debounce = BUTTON_DEBOUNCE_MASK,
-    .eState = IDLE,
-
-    .pfOnPressCallback = LEDS_ButtonBlinkCallback,
-    .pvOnPressContext = &rightLedConfig,
+const ResetButton_t g_sResetButton = {
+    .u32DioMask = BTN_RESET_MASK,
 };
-Button_t* const buttons[] = {&leftButton, &rightButton};
+// Buttons configurations - END
 
 DeviceConfig_t device_config = {
     .u8BasicEndpoint = WXKG15LM_BASIC_ENDPOINT,
     .u8ZdoEndpoint = WXKG15LM_ZDO_ENDPOINT,
     .bIsJoined = FALSE,
 
-    .psLedsConfigs = ledsConfigs,
-    .u8LedsAmount = LEDS_AMOUNT,
-
-    .sDeviceSetupLedsConfig = {.u32Mask = RESET_LED_MASK},
-
-    .psButtons = buttons,
-    .u8ButtonsAmount = BUTTONS_AMOUNT,
-
-    .u32ButtonsInterruptMask = BTN_INTERRUPT_MASK,
-    .sResetMaskConfig =
-        {
-            .u32DioMask = BTN_RESET_MASK,
-            .bPressed = FALSE,
-            .u16PressedCycles = 0,
-            .u8Debounce = BUTTON_DEBOUNCE_MASK,
-        },
-    .sDeviceBattery =
-        {
-            .sConfig =
-                {
-                    .u16Endpoint = 1,
-                },
-        },
+    .sDeviceBattery = {},
 };

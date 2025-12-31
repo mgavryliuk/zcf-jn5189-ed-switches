@@ -6,6 +6,7 @@
 #include "app_buttons.h"
 #include "app_leds.h"
 #include "app_zb_node.h"
+#include "device_config.h"
 #include "device_definitions.h"
 #include "zcl_customcommand.h"
 
@@ -46,6 +47,11 @@ const ConfigClusterModeChangedCallback g_cbZCLModeChanged = &CLDConfigurationClu
 
 static void BUTTONS_OnPressEventCallback(ButtonEvent_t eButtonEvent, uint8_t u8Endpoint) {
     COMMON_DBG("Processing button event: %d\n", eButtonEvent);
+    if (!device_config.bIsJoined) {
+        COMMON_DBG("Device is not in the network\n");
+        return;
+    }
+
     switch (eButtonEvent) {
         case BTN_TOGGLE_EVENT:
             eSendCommand(u8Endpoint, E_CLD_ONOFF_CMD_TOGGLE);

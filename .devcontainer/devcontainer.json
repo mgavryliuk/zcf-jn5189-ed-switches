@@ -26,7 +26,7 @@
     },
     "features": {
         "ghcr.io/devcontainers/features/git:1": {},
-        "ghcr.io/devcontainers/features/common-utils:2.5.3": {
+        "ghcr.io/devcontainers/features/common-utils:2.5.5": {
             "username": "none",
             "installZsh": "true",
             "configureZshAsDefaultShell": "true",

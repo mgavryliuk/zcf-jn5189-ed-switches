@@ -491,8 +491,8 @@
       <OutputClusters Cluster="Groups" TxAPDUs="DEVBOARD->apduZCL" Discoverable="true"/>
     </Endpoints>
     <PDUConfiguration NumNPDUs="25" PDUMMutexName="mutexPDUM">
-      <APDUs Id="DEVBOARD->apduZDP" Name="apduZDP" Size="100" Instances="20"/>
-      <APDUs Id="DEVBOARD->apduZCL" Name="apduZCL" Size="100" Instances="20"/>
+      <APDUs Id="DEVBOARD->apduZDP" Name="apduZDP" Size="100" Instances="16"/>
+      <APDUs Id="DEVBOARD->apduZCL" Name="apduZCL" Size="100" Instances="15"/>
     </PDUConfiguration>
     <ChannelMask Channel11="true" Channel12="false" Channel13="false" Channel14="false" Channel15="true" Channel16="false" Channel17="false" Channel18="false" Channel19="false" Channel20="true" Channel21="false" Channel22="false" Channel23="false" Channel24="false" Channel25="true" Channel26="false"/>
     <NodeDescriptor ManufacturerCode="4151" LogicalType="ZED" ComplexDescriptorAvailable="false" UserDescriptorAvailable="false" APSFlags="0" FrequencyBand="2.4GHz" AlternatePANCoordinator="false" DeviceType="false" PowerSource="false" RxOnWhenIdle="false" Security="false" AllocateAddress="true" MaximumBufferSize="127" MaximumIncomingTransferSize="1" MaximumOutgoingTransferSize="1" ExtendedActiveEndpointListAvailable="false" ExtendedSimpleDescriptorListAvailable="false" PrimaryTrustCenter="false" BackupTrustCenter="false" PrimaryBindingTableCache="false" BackupBindingTableCache="false" PrimaryDiscoveryCache="false" BackupDiscoveryCache="false" NetworkManager="false"/>
