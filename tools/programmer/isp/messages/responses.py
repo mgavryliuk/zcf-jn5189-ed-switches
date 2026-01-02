@@ -54,6 +54,9 @@ class GetMemoryInfoResponse(ResponseMessage):
             for access_bit in MemoryAccessBits:
                 if access_bit.value & access_byte:
                     access_list.append(access_bit.name)
+        
+        if not access_list:
+            access_list.append("NO_ACCESS")
 
         return DeviceMemory(
             MemoryID(memid),
@@ -61,6 +64,7 @@ class GetMemoryInfoResponse(ResponseMessage):
             base_addr,
             length,
             sector_size,
+            access_byte,
             MemoryType(mtype),
             access_list,
         )

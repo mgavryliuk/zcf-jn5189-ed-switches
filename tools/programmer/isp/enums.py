@@ -76,10 +76,10 @@ class MemoryType(IntEnum):
 
 class MemoryAccessBits(IntEnum):
     READ = 1
-    WRITE = 2
-    ERASE = 4
-    ERASE_ALL = 8
-    BLANK_CHECK = 16
+    WRITE = 1 << 1
+    ERASE = 1 << 2
+    ERASE_ALL = 1 << 3
+    BLANK_CHECK = 1 << 4
 
 
 CommandType = RequestCommandType | ResponseCommandType

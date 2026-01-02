@@ -60,6 +60,7 @@ class DeviceMemory:
     base_addr: int
     length: int
     sector_size: int
+    access_byte: int
     mtype: MemoryType
     access: list[str]
 

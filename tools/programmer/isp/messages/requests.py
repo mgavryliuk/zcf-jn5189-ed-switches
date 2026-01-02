@@ -98,7 +98,6 @@ class OpenFlashMemoryRequest(RequestMessage):
     msg_type: RequestCommandType = field(
         default=RequestCommandType.OPEN_MEMORY, init=False
     )
-    payload: bytes = field(default=bytes([0x00, 0x0F]), init=False)
 
 
 @dataclass

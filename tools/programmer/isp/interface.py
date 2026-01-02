@@ -94,13 +94,19 @@ class ISPInterface:
             device_id_resp = GetDeviceIDResponse.from_message(self.send_message(GetDeviceIDRequest()))
             device_id = device_id_resp.device_id
             self.send_message(CloseMemoryRequest())
+        except:
+            LOGGER.error("Failed to get device ID")
+        
+        try:
             self.send_message(OpenConfigMemoryRequest())
             mac_addr_resp = GetMacAddressResponse.from_message(self.send_message(GetMacAddressRequest()))
             mac_address = mac_addr_resp.mac_address
             self.send_message(CloseMemoryRequest())
-        finally:
-            self.device.mac_address = mac_address
-            self.device.device_id = device_id
+        except:
+            LOGGER.error("Failed to get device MAC-address")
+
+        self.device.mac_address = mac_address
+        self.device.device_id = device_id
 
         self.get_memory_info()
         self.device.print_info()
@@ -114,7 +120,7 @@ class ISPInterface:
 
     def erase(self) -> None:
         flash_memory = self.device.flash_memory
-        self.send_message(OpenFlashMemoryRequest())
+        self.send_message(OpenFlashMemoryRequest(payload= bytes([0x00, flash_memory.access_byte])))
         console.print(
             "[bold]Erasing memory with base addr %s size %s[/bold]"
             % (hex(flash_memory.base_addr), hex(flash_memory.length))
@@ -133,7 +139,7 @@ class ISPInterface:
 
         try:
             flash_memory = self.device.flash_memory
-            self.send_message(OpenFlashMemoryRequest())
+            self.send_message(OpenFlashMemoryRequest(payload= bytes([0x00, flash_memory.access_byte])))
             start_memory = 0
             sector_size = flash_memory.sector_size
             with fpath.open("rb") as f:
