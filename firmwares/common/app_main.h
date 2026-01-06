@@ -1,7 +1,6 @@
 #ifndef APP_MAIN_H
 #define APP_MAIN_H
 
-#include "app_polling.h"
 #include "dbg.h"
 #include "device_definitions.h"
 

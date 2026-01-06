@@ -28,8 +28,8 @@
 #define HW_DBG(...) DBG_vPrintf(DEBUG_ENABLE, "[HW INIT] " __VA_ARGS__)
 
 static void CLOCKS_Init(void);
-static void DBGConsole_Init(void);
 extern void OSA_TimeInit(void);
+static void DBGConsole_Init(void);
 
 /**
  * @brief Initializes essential hardware components.
@@ -46,6 +46,7 @@ void hardware_init(void) {
     POWER_Init();
     CLOCKS_Init();
     DBGConsole_Init();
+
     if (!bWarmStart) {
         HW_DBG("Cold start\n");
         bWarmStart = TRUE;
@@ -98,7 +99,7 @@ static void CLOCKS_Init(void) {
 }
 
 static void DBGConsole_Init(void) {
-#ifdef DBG_ENABLE
+#ifdef DEBUG_APP_ENABLED
     IOCON_PinMuxSet(IOCON, 0, UART_PIO_TX, IOCON_FUNC2 | IOCON_MODE_INACT | IOCON_DIGITAL_EN);
     IOCON_PinMuxSet(IOCON, 0, UART_PIO_RX, IOCON_FUNC2 | IOCON_MODE_INACT | IOCON_DIGITAL_EN);
     DbgConsole_Init(0, UART_BAUD_RATE, kSerialPort_Uart, CLOCK_GetFreq(kCLOCK_Xtal32M));

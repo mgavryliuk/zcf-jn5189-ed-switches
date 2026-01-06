@@ -24,7 +24,6 @@
 
 static void PreSleep(void);
 static void OnWakeUp(void);
-static void WakeCallBack(void);
 static void EnterMainLoop(void);
 static void vAttemptToSleep(void);
 
@@ -62,23 +61,25 @@ void main_task(uint32_t parameter) {
     };
     ZB_NODE_Init(&zbNodeCallbacks);
     ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
+    memset(&sWake, 0x0, sizeof(sWake));
     EnterMainLoop();
 }
 
 static void PreSleep(void) {
     APP_MAIN_DBG("PreSleep called\n");
-    DbgConsole_Flush();
-    DbgConsole_Deinit();
     ZTIMER_vSleep();
     if (device_config.bIsJoined) {
         vAppApiSaveMacSettings();
     }
+#ifdef DEBUG_APP_ENABLED
+    DbgConsole_Flush();
+    DbgConsole_Deinit();
+#endif
 }
 
 static void OnWakeUp(void) {
     APP_MAIN_DBG("On WakeUp called\n");
     ZTIMER_vWake();
-
     if (device_config.bIsJoined) {
         vAppApiRestoreMacSettings();
         ZPS_eAplAfSendKeepAlive();
@@ -95,10 +96,6 @@ static void OnWakeUp(void) {
             ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
         }
     }
-}
-
-static void WakeCallBack(void) {
-    APP_MAIN_DBG("Wake callback called\n");
 }
 
 static void vAttemptToSleep(void) {
@@ -126,11 +123,8 @@ static void vAttemptToSleep(void) {
         } else {
             (void)PWR_ChangeDeepSleepMode(PWR_E_SLEEP_OSCON_RAMON);
             PWR_Init();
-            PWR_vForceRadioRetention(FALSE);
-            PWR_teStatus eStatus = PWR_eRemoveActivity(&sWake);
-            APP_MAIN_DBG("PWR_eRemoveActivity status: %d\n", eStatus);
-            eStatus = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
-            APP_MAIN_DBG("PWR_eScheduleActivity status: %d\n", eStatus);
+            PWR_vForceRadioRetention(TRUE);
+            PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, NULL);
         }
     }
 }

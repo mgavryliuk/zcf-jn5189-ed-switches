@@ -44,9 +44,10 @@ add_compile_definitions(
     MODEM_154_IRQHandler=vMMAC_IntHandlerPhy
     SUPPORT_FOR_15_4=1
     FSL_CLOCK_SET_LDO_CALLED_INTERNALLY
+    SDK_DEBUGCONSOLE=2
 
     # DBG_ENABLE
-    # DEBUG_BDB
+
     BUILD_DATE="${BUILD_DATE}"
     BUILD_NUMBER="${BUILD_NUMBER}"
 )
@@ -165,26 +166,21 @@ set(SDK_SRC
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_aes.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_clock.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_common.c
-    # ${SDK_PREFIX}/devices/JN5189/drivers/fsl_ctimer.c
-    # ${SDK_PREFIX}/devices/JN5189/drivers/fsl_dma.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_flash.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_flexcomm.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_fmeas.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_gint.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_gpio.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_inputmux.c
-    # ${SDK_PREFIX}/devices/JN5189/drivers/fsl_pint.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_power.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_reset.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_rng.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_rtc.c
-    # ${SDK_PREFIX}/devices/JN5189/drivers/fsl_usart_dma.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_usart.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_wtimer.c
     ${SDK_PREFIX}/devices/JN5189/drivers/fsl_wwdt.c
 
     ${SDK_PREFIX}/devices/JN5189/utilities/debug_console/fsl_debug_console.c
-    # ${SDK_PREFIX}/devices/JN5189/utilities/fsl_assert.c
     ${SDK_PREFIX}/devices/JN5189/utilities/str/fsl_str.c
 
     ${SDK_PREFIX}/components/serial_manager/serial_manager.c
@@ -308,10 +304,10 @@ set(APP_SRC
 add_executable(${APP_TARGET} ${APP_SRC})
 
 target_compile_definitions(${APP_TARGET} PRIVATE
+    # DEBUG_APP_ENABLED
     # DEBUG_APP_WWDT
     # DEBUG_APP_MAIN
     # DEBUG_APP_BATTERY
-    
     # DEBUG_BASIC_EP
     # DEBUG_CONFIGURATION_CLUSTER
     # DEBUG_ON_OFF_EP
@@ -331,8 +327,6 @@ target_link_libraries(${APP_TARGET}
 )
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -TAppBuild16kEndDevice_JN5189.ld")
-
-MESSAGE(STATUS "CMAKE_SIZE: ${CMAKE_SIZE}")
 
 set_target_properties(${APP_TARGET} PROPERTIES SUFFIX ".axf")
 add_custom_command(TARGET ${APP_TARGET} POST_BUILD COMMAND ${CMAKE_SIZE} ${APP_TARGET}.axf)
