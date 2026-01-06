@@ -24,6 +24,7 @@
 
 static void PreSleep(void);
 static void OnWakeUp(void);
+static void WakeCallBack(void);
 static void EnterMainLoop(void);
 static void vAttemptToSleep(void);
 
@@ -31,6 +32,7 @@ extern void zps_taskZPS(void);
 extern uint8_t mLPMFlag;
 
 static PWR_tsWakeTimerEvent sWake;
+static bool_t bActivityScheduled = FALSE;
 static ZTIMER_tsTimer asTimers[ZTIMER_STORAGE];
 
 static uint8_t u8WakeCounter = 0;
@@ -98,6 +100,11 @@ static void OnWakeUp(void) {
     }
 }
 
+static void WakeCallBack(void) {
+    APP_MAIN_DBG("Wake callback called\n");
+    bActivityScheduled = FALSE;
+}
+
 static void vAttemptToSleep(void) {
     if (!POLL_IsSleepAllowed()) {
         return;
@@ -121,10 +128,17 @@ static void vAttemptToSleep(void) {
             PWR_Init();
             PWR_vForceRadioRetention(FALSE);
         } else {
-            (void)PWR_ChangeDeepSleepMode(PWR_E_SLEEP_OSCON_RAMON);
-            PWR_Init();
-            PWR_vForceRadioRetention(TRUE);
-            PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, NULL);
+            if (bActivityScheduled == FALSE) {
+                APP_MAIN_DBG("Going to E_AHI_SLEEP_OSCON_RAMON sleep for %d seconds\n", MAXIMUM_TIME_TO_SLEEP_SEC);
+                (void)PWR_ChangeDeepSleepMode(PWR_E_SLEEP_OSCON_RAMON);
+                PWR_Init();
+                PWR_vForceRadioRetention(TRUE);
+                PWRM_teStatus u8Status = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
+                bActivityScheduled = TRUE;
+                APP_MAIN_DBG("PWRM_eScheduleActivity status: %d\n", u8Status);
+            } else {
+                APP_MAIN_DBG("PWRM_eScheduleActivity is already running\n");
+            }
         }
     }
 }
