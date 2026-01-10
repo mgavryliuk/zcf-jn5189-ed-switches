@@ -7,23 +7,42 @@
     },
     "configurePresets": [
         {
-            "name": "WXKG15LM_ALT",
-            "displayName": "WXKG15LM_ALT",
-            "description": "Presset to build WXKG15LM_ALT",
+            "name": "DEVBOARD",
+            "displayName": "DEVBOARD",
+            "description": "Presset to build DEVBOARD",
             "generator": "Unix Makefiles",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "toolchain/CMakeToolchain.cmake",
-                "TARGET": "WXKG15LM_ALT"
+                "CMAKE_TOOLCHAIN_FILE": "CMakeToolchain.cmake",
+                "TARGET": "DEVBOARD",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "WXKG15LM",
+            "displayName": "WXKG15LM",
+            "description": "Presset to build WXKG15LM",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "CMakeToolchain.cmake",
+                "TARGET": "WXKG15LM",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
         }
     ],
     "buildPresets": [
         {
-            "name": "WXKG15LM_ALT",
+            "name": "DEVBOARD",
             "configuration": "Release",
-            "configurePreset": "WXKG15LM_ALT",
-            "targets": "WXKG15LM_ALT.bin"
+            "configurePreset": "DEVBOARD",
+            "targets": "DEVBOARD.bin"
+        },
+        {
+            "name": "WXKG15LM",
+            "configuration": "Release",
+            "configurePreset": "WXKG15LM",
+            "targets": "WXKG15LM.bin"
         }
     ]
 }

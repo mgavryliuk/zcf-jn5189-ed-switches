@@ -1,9 +1,7 @@
 build
-toolchain/**
-!toolchain/CMakeToolchain.cmake
 !.keep
-sdk/**
-!sdk/.keep
 
+.cache
 .DS_Store
 .vscode
+compile_commands.json
