@@ -1,7 +1,5 @@
 build
 !.keep
-sdk/**
-!sdk/.keep
 
 .cache
 .DS_Store

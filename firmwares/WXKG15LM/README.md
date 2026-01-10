@@ -7,12 +7,6 @@
 # Overview
 [WXKG15LM](https://www.zigbee2mqtt.io/devices/WXKG15LM.html) - Wireless mini switch
 
-### Plan
-- [x] Board reverse engeniering
-- [ ] Implement zigbee device
-- [ ] Implement basic mqtt converter
-- [ ] Add docs
-
 ## DIOs definition
 - Left LED - PIO 0
 - Right LED - PIO 15

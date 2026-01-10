@@ -12,8 +12,8 @@ set(JENNIC_MAC "MiniMac")
 
 set(SDK_PREFIX ${PROJECT_SOURCE_DIR}/sdk)
 set(SDK_LINKER_SCRIPT_DIR "${SDK_PREFIX}/middleware/wireless/zigbee/platform/K32W0/libs")
-set(ZPS_CONFIG "${PROJECT_SOURCE_DIR}/tools/ZPSConfig.py")
-set(PDUM_CONFIG "${PROJECT_SOURCE_DIR}/tools/PDUMConfig.py")
+set(ZPS_CONFIG "${PROJECT_SOURCE_DIR}/utils/ZPSConfig.py")
+set(PDUM_CONFIG "${PROJECT_SOURCE_DIR}/utils/PDUMConfig.py")
 set(ZPSCFG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${APP_TARGET}/app.zpscfg")
 set(DK6_IMAGE_TOOL "${SDK_PREFIX}/tools/imagetool/dk6_image_tool.py")
 

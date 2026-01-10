@@ -1,0 +1,12 @@
+#!/bin/sh
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+which py 2>/dev/null 1>&2
+if [ $? = 0 ];
+then
+  PYTHON="py -3"
+else
+  PYTHON="python3"
+fi
+
+${PYTHON} - "$@" < ${0}.py
