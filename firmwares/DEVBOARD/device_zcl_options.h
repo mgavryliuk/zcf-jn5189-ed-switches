@@ -1,7 +1,7 @@
 #ifndef DEVICE_ZCL_OPTIONS_H
 #define DEVICE_ZCL_OPTIONS_H
 
-#define CLD_BAS_MODEL_STR "lumi.remote.b28ac1.diy"
-#define CLD_BAS_MODEL_ID_SIZE (23)
+#define CLD_BAS_MODEL_STR "devboard_jn5189"
+#define CLD_BAS_MODEL_ID_SIZE (15)
 
 #endif

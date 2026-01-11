@@ -2,6 +2,7 @@
 - [Getting Started](#getting-started)
 - [Devices](#devices)
 - [Flashing](#flashing)
+- [Pairing after flashing](pairing-after-flashing)
 - [JN5189 Documentation](#jn5189-documentation)
 
 # Overview
@@ -100,6 +101,27 @@ Erasing memory with base addr 0x0 size 0x9de00
 Memory successfully erased
 Uploading... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 ```
+
+# Pairing after flashing
+
+1. **Remove the old device** from Zigbee2MQTT and restart Zigbee2MQTT.  
+
+2. **Add the custom converter**  
+   Copy the converter file from this repository into your Zigbee2MQTT `external_converters` directory and restart Zigbee2MQTT again.
+
+3. **Permin join in Zigbee2MQTT**  
+
+4. **Start pairing mode**  
+   Press and hold **both buttons** (or the single button on 1-button models), until the LED starts **rapidly blinking**.
+
+5. **Bind the Power Configuration cluster**  
+    > Do this **even if a binding already exists** — otherwise battery reports will not work.
+    Go to the device **Bind** tab and press **Bind** with the following settings:
+
+   - Source endpoint: `1`  
+   - Destination endpoint: `1`  
+   - Cluster: `genPowerCfg`  
+
 
 # JN5189 Documentation
 [Product page](https://www.nxp.com/products/JN5189_88_T)</br>
