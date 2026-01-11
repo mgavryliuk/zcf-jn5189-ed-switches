@@ -10,26 +10,26 @@ tsReports asDefaultReports[ZCL_NUMBER_OF_REPORTS] = {
         GENERAL_CLUSTER_ID_POWER_CONFIGURATION,
         FALSE,
         {
-            0,
-            E_ZCL_UINT8,
-            E_CLD_PWRCFG_ATTR_ID_BATTERY_VOLTAGE,
-            ZCL_SYSTEM_MIN_REPORT_INTERVAL,
-            ZCL_SYSTEM_MAX_REPORT_INTERVAL,
-            0,
-            {1},
+            .u8DirectionIsReceived = 0,
+            .eAttributeDataType = E_ZCL_UINT8,
+            .u16AttributeEnum = E_CLD_PWRCFG_ATTR_ID_BATTERY_VOLTAGE,
+            .u16MinimumReportingInterval = ZCL_SYSTEM_MIN_REPORT_INTERVAL,
+            .u16MaximumReportingInterval = ZCL_SYSTEM_MAX_REPORT_INTERVAL,
+            .u16TimeoutPeriodField = 0,
+            .uAttributeReportableChange = {1},
         },
     },
     {
         GENERAL_CLUSTER_ID_POWER_CONFIGURATION,
         FALSE,
         {
-            0,
-            E_ZCL_UINT8,
-            E_CLD_PWRCFG_ATTR_ID_BATTERY_PERCENTAGE_REMAINING,
-            ZCL_SYSTEM_MIN_REPORT_INTERVAL,
-            ZCL_SYSTEM_MAX_REPORT_INTERVAL,
-            0,
-            {1},
+            .u8DirectionIsReceived = 0,
+            .eAttributeDataType = E_ZCL_UINT8,
+            .u16AttributeEnum = E_CLD_PWRCFG_ATTR_ID_BATTERY_PERCENTAGE_REMAINING,
+            .u16MinimumReportingInterval = ZCL_SYSTEM_MIN_REPORT_INTERVAL,
+            .u16MaximumReportingInterval = ZCL_SYSTEM_MAX_REPORT_INTERVAL,
+            .u16TimeoutPeriodField = 0,
+            .uAttributeReportableChange = {1},
         },
     },
 };
@@ -55,10 +55,12 @@ PUBLIC void REPORTING_MakeSupportedAttributesReportable(void) {
                       asDefaultReports[i].sAttributeReportingConfigurationRecord.u8DirectionIsReceived,
                       asDefaultReports[i].sAttributeReportingConfigurationRecord.uAttributeReportableChange.zint8ReportableChange,
                       bManufacturerSpecific);
+
+        REPORTING_DBG("Configuring attribute %04x to be reportable\n", u16AttributeEnum);
+        eStatus = eZCL_SetReportableFlag(device_config.u8BasicEndpoint, u16ClusterId, TRUE, FALSE, u16AttributeEnum);
+        REPORTING_DBG("eZCL_SetReportableFlag status: %d\n", eStatus);
         eStatus = eZCL_CreateLocalReport(device_config.u8BasicEndpoint, u16ClusterId, bManufacturerSpecific, TRUE,
                                          psAttributeReportingConfigurationRecord);
-        if (eStatus != E_ZCL_SUCCESS) {
-            REPORTING_DBG("REPORT: eZCL_CreateLocalReport failed with status %d\n", eStatus);
-        }
+        REPORTING_DBG("REPORT: eZCL_CreateLocalReport failed with status %d\n", eStatus);
     }
 }

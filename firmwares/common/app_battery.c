@@ -78,7 +78,7 @@ static void BATTERY_UpdateCluster(void) {
     BAT_DBG("Search for cluster entry %d in endpoint %d status: %d\n", GENERAL_CLUSTER_ID_POWER_CONFIGURATION,
             device_config.u8BasicEndpoint, eStatus);
 
-    BAT_DBG("Updating  cluster with Voltage (mV): %u (%d%%)\n", deviceBattery.voltage_mV / 100, deviceBattery.percent);
+    BAT_DBG("Updating  cluster with Voltage (mV): %u (%d%%)\n", deviceBattery.voltage_mV, deviceBattery.percent);
 
     ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryVoltage =
         (uint8)(deviceBattery.voltage_mV / 100);

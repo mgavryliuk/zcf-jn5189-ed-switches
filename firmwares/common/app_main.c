@@ -14,6 +14,7 @@
 #include "app_zcl_tick.h"
 #include "bdb_api.h"
 #include "device_config.h"
+#include "fsl_debug_console.h"
 #include "fsl_power.h"
 #include "fsl_wwdt.h"
 #include "pdum_gen.h"

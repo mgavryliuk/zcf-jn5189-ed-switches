@@ -57,11 +57,6 @@ void BASIC_EP_Init(void) {
     memcpy(sBasicEndpoint.sBasicServerCluster.au8ModelIdentifier, CLD_BAS_MODEL_STR, CLD_BAS_MODEL_ID_SIZE);
     memcpy(sBasicEndpoint.sBasicServerCluster.au8DateCode, CLD_BAS_DATE_STR, CLD_BAS_DATE_SIZE);
     memcpy(sBasicEndpoint.sBasicServerCluster.au8SWBuildID, CLD_BAS_SW_BUILD_STR, CLD_BAS_SW_BUILD_SIZE);
-
-    BASIC_EP_DBG("Configuring voltage attribute to be reportable\n");
-    eZCL_Status = eZCL_SetReportableFlag(device_config.u8BasicEndpoint, GENERAL_CLUSTER_ID_POWER_CONFIGURATION, TRUE, FALSE,
-                                         E_CLD_PWRCFG_ATTR_ID_BATTERY_VOLTAGE);
-    BASIC_EP_DBG("eZCL_SetReportableFlag status: %d\n", eZCL_Status);
 }
 
 static void BASIC_EP_Callback(tsZCL_CallBackEvent* psEvent) {
