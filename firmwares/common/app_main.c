@@ -89,11 +89,6 @@ static void OnWakeUp(void) {
         ZCLTick_Start();
         POLL_Start(&POLL_REGULAR_CONFIG);
 
-        if (u8WakeCounter == 0) {
-            BATTERY_UpdateStatus();
-        }
-        u8WakeCounter = (u8WakeCounter + 1) % BATTERY_REPORT_EVERY_X_WAKEUPS;
-
         if (POWER_GetIoWakeStatus() & g_u32ButtonsInterruptMask) {
             APP_MAIN_DBG("Wake caused by button pressed!\n");
             ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
@@ -104,6 +99,12 @@ static void OnWakeUp(void) {
 static void WakeCallBack(void) {
     APP_MAIN_DBG("Wake callback called\n");
     bActivityScheduled = FALSE;
+    if (device_config.bIsJoined) {
+        if (u8WakeCounter == 0) {
+            BATTERY_UpdateStatus();
+        }
+        u8WakeCounter = (u8WakeCounter + 1) % BATTERY_REPORT_EVERY_X_WAKEUPS;
+    }
 }
 
 static void vAttemptToSleep(void) {
