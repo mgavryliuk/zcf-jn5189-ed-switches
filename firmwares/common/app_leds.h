@@ -39,5 +39,6 @@ void LEDS_TurnOff(LedWithState_t* psLedWithState);
 void LEDS_BlinkDuringNetworkSetup_Start(void* pvParam);
 void LEDS_BlinkDuringNetworkSetup_Stop(void);
 void LEDS_ButtonBlinkCallback(void* ctx);
+void LEDS_EnableClamp(void);
 
 #endif /* APP_LEDS_H */

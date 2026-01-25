@@ -19,7 +19,6 @@
 #define MAX_BATTERY_VOLTAGE 3200U
 #define MIN_BATTERY_VOLTAGE 2200U
 #define ADC_MAX_VALUE ((1U << 12) - 1U)
-#define BATTERY_REPORT_EVERY_X_WAKEUPS 24
 
 typedef struct {
     uint16_t voltage_mV;

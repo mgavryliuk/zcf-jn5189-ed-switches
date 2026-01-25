@@ -18,7 +18,6 @@
 #include "fsl_power.h"
 #include "fsl_wwdt.h"
 #include "pdum_gen.h"
-#include "pwrm.h"
 #include "zps_apl_af.h"
 #include "zps_apl_zdo.h"
 #include "zps_gen.h"
@@ -74,6 +73,7 @@ static void PreSleep(void) {
     if (device_config.bIsJoined) {
         vAppApiSaveMacSettings();
     }
+    LEDS_EnableClamp();
 #ifdef DEBUG_APP_ENABLED
     DbgConsole_Flush();
     DbgConsole_Deinit();
@@ -89,11 +89,6 @@ static void OnWakeUp(void) {
         ZCLTick_Start();
         POLL_Start(&POLL_REGULAR_CONFIG);
 
-        if (u8WakeCounter == 0) {
-            BATTERY_UpdateStatus();
-        }
-        u8WakeCounter = (u8WakeCounter + 1) % BATTERY_REPORT_EVERY_X_WAKEUPS;
-
         if (POWER_GetIoWakeStatus() & g_u32ButtonsInterruptMask) {
             APP_MAIN_DBG("Wake caused by button pressed!\n");
             ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
@@ -104,6 +99,12 @@ static void OnWakeUp(void) {
 static void WakeCallBack(void) {
     APP_MAIN_DBG("Wake callback called\n");
     bActivityScheduled = FALSE;
+    if (device_config.bIsJoined) {
+        if (u8WakeCounter == 0) {
+            BATTERY_UpdateStatus();
+        }
+        u8WakeCounter = (u8WakeCounter + 1) % BATTERY_REPORT_EVERY_X_WAKEUPS;
+    }
 }
 
 static void vAttemptToSleep(void) {
@@ -112,6 +113,7 @@ static void vAttemptToSleep(void) {
     }
 
     uint16_t u16Activities = mLPMFlag;
+
     if (POLL_IsRunning() && u16Activities > 0)
         u16Activities--;
 
@@ -134,7 +136,7 @@ static void vAttemptToSleep(void) {
                 (void)PWR_ChangeDeepSleepMode(PWR_E_SLEEP_OSCON_RAMON);
                 PWR_Init();
                 PWR_vForceRadioRetention(TRUE);
-                PWRM_teStatus u8Status = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
+                PWR_teStatus u8Status = PWR_eScheduleActivity(&sWake, MAXIMUM_TIME_TO_SLEEP_SEC * 1000, WakeCallBack);
                 bActivityScheduled = TRUE;
                 APP_MAIN_DBG("PWRM_eScheduleActivity status: %d\n", u8Status);
             } else {

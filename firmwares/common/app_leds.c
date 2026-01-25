@@ -92,6 +92,12 @@ void LEDS_ButtonBlinkCallback(void* ctx) {
     LEDS_Blink(state);
 }
 
+void LEDS_EnableClamp(void) {
+    for (uint8_t i = 0; i < g_numLeds; i++) {
+        IOCON_PinMuxSet(IOCON, 0, g_asLedsPins[i], IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_IO_CLAMPING_NORMAL_MFIO);
+    }
+}
+
 static void LEDS_BlinkTurnOffCallback(void* pvParam) {
     LedWithState_t* ledWithState = (LedWithState_t*)pvParam;
     LEDS_DBG("LED(%u). Blink turn off callback called\n", ledWithState->psLed->u32DioMask);

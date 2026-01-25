@@ -2,7 +2,7 @@ set(APP_TARGET ${TARGET})
 set(SDK_TARGET SDK)
 set(PRE_BUILD_TARGET ZPS_PDUM_lib)
 set(VENV_DIR $ENV{VENV_DIR})
-set(BUILD_NUMBER "000001")
+set(BUILD_NUMBER "000002")
 string(TIMESTAMP BUILD_DATE "%Y%m%d" UTC)
 
 set(JENNIC_CHIP JN5189)
@@ -44,6 +44,9 @@ add_compile_definitions(
     MODEM_154_IRQHandler=vMMAC_IntHandlerPhy
     SUPPORT_FOR_15_4=1
     FSL_CLOCK_SET_LDO_CALLED_INTERNALLY
+    gClkUseFro32K=1
+    gPWR_UseAlgoTimeBaseDriftCompensate=1
+    gClkRecalFro32K=0
     SDK_DEBUGCONSOLE=2
 
     # DBG_ENABLE
