@@ -97,10 +97,11 @@ static void OnWakeUp(void) {
 }
 
 static void WakeCallBack(void) {
-    APP_MAIN_DBG("Wake callback called\n");
+    APP_MAIN_DBG("Wake callback called: %d\n", u8WakeCounter);
     bActivityScheduled = FALSE;
     if (device_config.bIsJoined) {
         if (u8WakeCounter == 0) {
+            APP_MAIN_DBG("Updating battery status\n");
             BATTERY_UpdateStatus();
         }
         u8WakeCounter = (u8WakeCounter + 1) % BATTERY_REPORT_EVERY_X_WAKEUPS;
