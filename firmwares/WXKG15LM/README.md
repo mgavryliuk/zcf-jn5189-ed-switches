@@ -5,7 +5,7 @@
 - [Build](#build)
 
 # Overview
-[WXKG15LM](https://www.zigbee2mqtt.io/devices/WXKG15LM.html) - Wireless mini switch
+[WXKG15LM](https://www.zigbee2mqtt.io/devices/WXKG15LM.html) - Wireless remote switch H1 (double rocker)
 
 ## DIOs definition
 - Left LED - PIO 0
