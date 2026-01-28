@@ -12,10 +12,10 @@
 
 #define APP_MAIN_DBG(...) DBG_vPrintf(TRACE_APP_MAIN, "[APP MAIN] " __VA_ARGS__)
 
-// wake up every day to communicate with parent device. Cannot exeed uin32_t after multiplying on 32768
-#define MAXIMUM_TIME_TO_SLEEP_SEC (60 * 60 * 24)
-// report battery on every seond wake up, e.g. every 10th day
-#define BATTERY_REPORT_EVERY_X_WAKEUPS 10
+// Wake Timer1 (28-bit) max ≈ 8192s, keep below limit
+#define MAXIMUM_TIME_TO_SLEEP_SEC (60 * 60 * 2)  // 2h
+// report battery on every 120 wake up, e.g. approx 240h (~10 days)
+#define BATTERY_REPORT_EVERY_X_WAKEUPS 120
 // leds amount + 1 network config leds + 1 button pollings + 1 ZCL tick + 1 POLLING + BDB Timers
 #define ZTIMER_STORAGE (LEDS_AMOUNT + 1 + 1 + 1 + 1 + BDB_ZTIMER_STORAGE)
 
