@@ -132,12 +132,3 @@ Uploading... ━━━━━━━━━━━━━━━━━━━━━━�
 [ZigBee Cluster Library (for ZigBee 3.0)](docs/JN-UG-3132-ZigBee3-Cluster-Library.pdf)</br>
 [JN518x & K32W041/K32W061 Core Utilities](docs/JN-UG-3133-Core-Utilities.pdf)</br>
 [ZigBee Green Power (for ZigBee 3.0)](docs/JN-UG-3134-Zigbee3-Green-Power.pdf)</br>
-
-## Support the Project
-If you find this project helpful, please consider supporting the development. Due to limited payment options available in Ukraine, these are currently the only ways to support the project:
-* becoming a patron on [Patreon](https://www.patreon.com/mgavryliuk) to help fund ongoing development and maintenance
-* make a one-time contribution through the [Patreon store](https://www.patreon.com/mgavryliuk/shop)
-
-Your support allows me to dedicate more time to improving and expanding the custom firmware options.
-
-**Thank you!**

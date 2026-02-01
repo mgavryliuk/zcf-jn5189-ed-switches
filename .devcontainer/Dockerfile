@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     clangd \
     clang-format \
+    gnupg2 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p ${TOOLCHAIN_DIR} && \
