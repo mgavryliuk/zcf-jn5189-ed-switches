@@ -43,21 +43,15 @@ const multiStateActions = {
 
 const definition = [
     {
-        zigbeeModel: ["lumi.remote.b28ac1.diy"],
-        model: "WXKG15LM",
+        zigbeeModel: ["lumi.remote.b18ac1.diy"],
+        model: "WXKG14LM",
         vendor: "Aqara",
-        description: "Wireless remote switch H1 (double rocker)",
+        description: "Wireless remote switch H1 (single rocker)",
         fromZigbee: [fz.battery],
         toZigbee: [],
         exposes: [e.battery(), e.battery_voltage()],
         extend: [
             deviceExtend.ManuConfigurationCluster(),
-            mExt.deviceEndpoints({
-                endpoints: {
-                    left: 2,
-                    right: 3,
-                }
-            }),
             mExt.enumLookup({
                 name: "operation_mode",
                 lookup: operationModesLookup,
@@ -83,7 +77,6 @@ const definition = [
                 actionLookup: multiStateActions,
                 cluster: "genMultistateInput",
                 attribute: "presentValue",
-                endpointNames: ["left", "right"],
                 commands: ["attributeReport", "readResponse"],
             })
         ],

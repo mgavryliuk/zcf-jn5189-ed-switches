@@ -29,6 +29,18 @@
                 "TARGET": "WXKG15LM",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
+        },
+        {
+            "name": "WXKG14LM",
+            "displayName": "WXKG14LM",
+            "description": "Presset to build WXKG14LM",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "CMakeToolchain.cmake",
+                "TARGET": "WXKG14LM",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
         }
     ],
     "buildPresets": [
@@ -43,6 +55,12 @@
             "configuration": "Release",
             "configurePreset": "WXKG15LM",
             "targets": "WXKG15LM.bin"
+        },
+        {
+            "name": "WXKG14LM",
+            "configuration": "Release",
+            "configurePreset": "WXKG14LM",
+            "targets": "WXKG14LM.bin"
         }
     ]
 }
