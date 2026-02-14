@@ -28,6 +28,7 @@ This project uses VS Code and [Dev Containers](https://code.visualstudio.com/doc
 # Devices
 | Device | Description | Documentation | Build Preset |
 |--------|-------------|---------------|--------------|
+| WXKG14LM | Wireless remote switch H1 (single rocker) | [Documentation](firmwares/WXKG14LM/README.md) | `WXKG14LM` |
 | WXKG15LM | Wireless remote switch H1 (double rocker) | [Documentation](firmwares/WXKG15LM/README.md) | `WXKG15LM` |
 
 # Flashing
