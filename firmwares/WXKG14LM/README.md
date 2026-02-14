@@ -9,12 +9,12 @@
 
 ## DIOs definition
 TODO: UPDATE PINS andd add photos + circuit diagrams
-- LED - PIO 0
-- Button - PIO 12
+- LED - PIO 3
+- Button - PIO 13
 
 ## Board
-![Board Front](/images/WXKG14LM/board_front.png)
-![Board Back](/images/WXKG14LM/board_back.png)
+![Board Front](/images/WXKG14LM/board_front.jpeg)
+![Board Back](/images/WXKG14LM/board_back.jpeg)
 
 ## Circuit diagrams
 LEDs circuit: </br>
