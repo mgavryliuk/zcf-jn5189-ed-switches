@@ -79,6 +79,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     steps:
+      - name: Check out repository code
+        uses: actions/checkout@v5
       - name: Download release artifact
         uses: actions/download-artifact@v5
         with:
