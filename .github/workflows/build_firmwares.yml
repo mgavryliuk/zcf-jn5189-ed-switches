@@ -1,0 +1,95 @@
+name: Build and release firmwares
+run-name: Release ${{ github.ref_name }} 🚀
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      VENV_DIR: /tmp/venv
+      TOOLCHAIN_DIR: /opt/arm-none-eabi
+    strategy:
+      matrix:
+        preset: [WXKG14LM, WXKG15LM]
+        include:
+          - preset: WXKG14LM
+            device_name: "Wireless remote switch H1 (single rocker)"
+          - preset: WXKG15LM
+            device_name: "Wireless remote switch H1 (double rocker)"
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v5
+
+      # Prepare environment
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+            ca-certificates \
+            wget \
+            xz-utils \
+            make \
+            cmake
+      # Prepare python environment
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v7
+      - name: Setup Python environment
+        run: |
+          uv python install 3.14
+          uv venv -p 3.14 "${VENV_DIR}"
+          uv --directory "${VENV_DIR}" pip install lxml
+      # Prepare toolchain
+      - name: Download toolchain
+        run: |
+          TOOLCHAIN_ARCH=x86_64
+          TOOLCHAIN_VERSION=14.2.rel1
+          TOOLCHAIN_URL="https://developer.arm.com/-/media/Files/downloads/gnu/${TOOLCHAIN_VERSION}/binrel/arm-gnu-toolchain-${TOOLCHAIN_VERSION}-${TOOLCHAIN_ARCH}-arm-none-eabi.tar.xz"
+          mkdir -p ${TOOLCHAIN_DIR}
+          wget -qO- ${TOOLCHAIN_URL} | tar xJ --strip-components=1 -C ${TOOLCHAIN_DIR}
+          echo "${TOOLCHAIN_DIR}/bin" >> $GITHUB_PATH
+      # Configure and build
+      - name: Set BUILD_NUMBER from release tag
+        if: github.event_name == 'release'
+        run: |
+          echo "BUILD_NUMBER=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+      - name: Set BUILD_NUMBER for non-release
+        if: github.event_name != 'release'
+        run: echo "BUILD_NUMBER=999999" >> $GITHUB_ENV
+
+      - name: Set BUILD_DATE
+        run: echo "BUILD_DATE=$(date -u +%Y%m%d)" >> $GITHUB_ENV
+      - name: Build firmware – ${{ matrix.device_name }}
+        run: |
+          cmake -S . -B build --preset ${{ matrix.preset }} \
+            -DBUILD_DATE=${BUILD_DATE} \
+            ${BUILD_NUMBER:+-DBUILD_NUMBER=$BUILD_NUMBER}
+          cmake --build build
+      # Upload artifacts to the action
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.device_name }} (${{ matrix.preset }})
+          path: |
+            firmwares/**/*.bin
+  
+  upload-to-release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+      - name: Download release artifact
+        uses: actions/download-artifact@v5
+        with:
+          path: ./firmwares
+      - name: Publish built binaries to GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          shopt -s globstar
+          for f in ./firmwares/**/*.bin; do
+            echo "Uploading ${f}..."
+            gh release upload ${{ github.event.release.tag_name }} "${f}"
+          done
