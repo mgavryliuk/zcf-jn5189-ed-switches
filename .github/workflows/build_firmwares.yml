@@ -77,6 +77,8 @@ jobs:
   upload-to-release:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     if: github.event_name == 'release'
     steps:
       - name: Check out repository code
