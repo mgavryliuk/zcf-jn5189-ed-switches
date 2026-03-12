@@ -51,6 +51,7 @@ add_compile_definitions(
     gClkRecalFro32K=0
     SDK_DEBUGCONSOLE=2
 
+    # SDK_DEBUGCONSOLE=1
     # DBG_ENABLE
 
     BUILD_DATE="${BUILD_DATE}"
@@ -340,5 +341,4 @@ add_custom_target(${APP_TARGET}.bin ALL
     COMMAND uv run --directory ${VENV_DIR} ${DK6_IMAGE_TOOL} -s 294912 -b 0 ${CMAKE_CURRENT_BINARY_DIR}/${APP_TARGET}.axf
     COMMAND ${CMAKE_COMMAND} -E echo "Generating binary ..."
     COMMAND ${CMAKE_OBJCOPY} -v -O binary ${APP_TARGET}.axf ${APP_TARGET}.bin
-    COMMAND cp ${APP_TARGET}.bin ${PROJECT_SOURCE_DIR}/firmwares/${APP_TARGET}/${BUILD_NUMBER}_${BUILD_DATE}_${APP_TARGET}.bin
 )
