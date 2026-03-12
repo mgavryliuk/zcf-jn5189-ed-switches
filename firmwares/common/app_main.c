@@ -62,7 +62,7 @@ void main_task(uint32_t parameter) {
         .pfOnNWKSteeringStopCallback = LEDS_BlinkDuringNetworkSetup_Stop,
     };
     ZB_NODE_Init(&zbNodeCallbacks);
-    ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
+    ZTIMER_eStart(g_u8ButtonScanTimerID, 1);
     memset(&sWake, 0x0, sizeof(sWake));
     EnterMainLoop();
 }
@@ -83,16 +83,14 @@ static void PreSleep(void) {
 static void OnWakeUp(void) {
     APP_MAIN_DBG("On WakeUp called\n");
     ZTIMER_vWake();
+    if (POWER_GetIoWakeStatus() & g_u32ButtonsInterruptMask) {
+        APP_MAIN_DBG("Wake caused by button pressed!\n");
+        ZTIMER_eStart(g_u8ButtonScanTimerID, 1);
+    }
     if (device_config.bIsJoined) {
         vAppApiRestoreMacSettings();
-        ZPS_eAplAfSendKeepAlive();
         ZCLTick_Start();
         POLL_Start(&POLL_REGULAR_CONFIG);
-
-        if (POWER_GetIoWakeStatus() & g_u32ButtonsInterruptMask) {
-            APP_MAIN_DBG("Wake caused by button pressed!\n");
-            ZTIMER_eStart(g_u8ButtonScanTimerID, BUTTONS_SCAN_TIME_MSEC);
-        }
     }
 }
 

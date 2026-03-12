@@ -104,7 +104,8 @@ static void BUTTONS_ScanCallback(void* pvParam) {
 }
 
 static void BUTTONS_GINTCallback(void) {
-    BUTTONS_ScanCallback(NULL);
+    GINT_DisableCallback(GINT0);
+    ZTIMER_eStart(g_u8ButtonScanTimerID, 1);
 }
 
 static void BUTTONS_ResetState(ButtonState_t* buttonState) {
