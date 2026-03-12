@@ -298,6 +298,7 @@ set(APP_SRC
     common/hardware_init.c
     common/app_basic_ep.c
     common/app_on_off_ep.c
+    common/app_radiocb.c
     common/app_reporting.c
     common/app_zcl_tick.c
     common/ConfigurationCluster.c
@@ -323,6 +324,7 @@ target_compile_definitions(${APP_TARGET} PRIVATE
     # DEBUG_NODE
     # DEBUG_ZCL_TICK
     # DEBUG_COMMON
+    # DEBUG_RADIO_CALIBRATIONS
 )
 
 target_link_libraries(${APP_TARGET}
