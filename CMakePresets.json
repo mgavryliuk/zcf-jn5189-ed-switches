@@ -7,39 +7,40 @@
     },
     "configurePresets": [
         {
-            "name": "DEVBOARD",
-            "displayName": "DEVBOARD",
-            "description": "Presset to build DEVBOARD",
+            "name": "base",
+            "hidden": true,
             "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build",
+            "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "CMakeToolchain.cmake",
-                "TARGET": "DEVBOARD",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "DEVBOARD",
+            "displayName": "DEVBOARD",
+            "description": "Configure build for DEVBOARD",
+            "inherits": "base",
+            "cacheVariables": {
+                "TARGET": "DEVBOARD"
             }
         },
         {
             "name": "WXKG15LM",
             "displayName": "WXKG15LM",
-            "description": "Presset to build WXKG15LM",
-            "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build",
+            "description": "Configure build for WXKG15LM",
+            "inherits": "base",
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "CMakeToolchain.cmake",
-                "TARGET": "WXKG15LM",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+                "TARGET": "WXKG15LM"
             }
         },
         {
             "name": "WXKG14LM",
             "displayName": "WXKG14LM",
-            "description": "Presset to build WXKG14LM",
-            "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build",
+            "description": "Configure build for WXKG14LM",
+            "inherits": "base",
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "CMakeToolchain.cmake",
-                "TARGET": "WXKG14LM",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+                "TARGET": "WXKG14LM"
             }
         }
     ],
@@ -48,18 +49,21 @@
             "name": "DEVBOARD",
             "configuration": "Release",
             "configurePreset": "DEVBOARD",
+            "description": "Build binary firmware DEVBOARD",
             "targets": "DEVBOARD.bin"
         },
         {
             "name": "WXKG15LM",
             "configuration": "Release",
             "configurePreset": "WXKG15LM",
+            "description": "Build binary firmware WXKG15LM",
             "targets": "WXKG15LM.bin"
         },
         {
             "name": "WXKG14LM",
             "configuration": "Release",
             "configurePreset": "WXKG14LM",
+            "description": "Build binary firmware WXKG14LM",
             "targets": "WXKG14LM.bin"
         }
     ]

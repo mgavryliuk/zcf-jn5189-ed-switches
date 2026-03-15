@@ -51,6 +51,7 @@ add_compile_definitions(
     gClkRecalFro32K=0
     SDK_DEBUGCONSOLE=2
 
+    # SDK_DEBUGCONSOLE=1
     # DBG_ENABLE
 
     BUILD_DATE="${BUILD_DATE}"
@@ -285,7 +286,7 @@ set(LDLIBS
 
 set(APP_SRC
     ${APP_TARGET}/device_config.c
-    common/app_battery.c
+    common/app_adc.c
     common/app_buttons.c
     common/app_common.c
     common/app_leds.c
@@ -297,6 +298,7 @@ set(APP_SRC
     common/hardware_init.c
     common/app_basic_ep.c
     common/app_on_off_ep.c
+    common/app_radiocb.c
     common/app_reporting.c
     common/app_zcl_tick.c
     common/ConfigurationCluster.c
@@ -310,9 +312,9 @@ add_executable(${APP_TARGET} ${APP_SRC})
 
 target_compile_definitions(${APP_TARGET} PRIVATE
     # DEBUG_APP_ENABLED
-    # DEBUG_APP_WWDT
     # DEBUG_APP_MAIN
-    # DEBUG_APP_BATTERY
+    # DEBUG_APP_WWDT
+    # DEBUG_HW_ENABLED
     # DEBUG_BASIC_EP
     # DEBUG_CONFIGURATION_CLUSTER
     # DEBUG_ON_OFF_EP
@@ -322,6 +324,8 @@ target_compile_definitions(${APP_TARGET} PRIVATE
     # DEBUG_NODE
     # DEBUG_ZCL_TICK
     # DEBUG_COMMON
+    # DEBUG_RADIO_CALIBRATIONS
+    # DEBUG_APP_ADC
 )
 
 target_link_libraries(${APP_TARGET}

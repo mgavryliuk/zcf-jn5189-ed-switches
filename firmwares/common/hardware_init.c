@@ -17,15 +17,17 @@
 #include "fsl_power.h"
 #include "fsl_reset.h"
 
-#ifndef DEBUG_ENABLE
-#define DEBUG_ENABLE FALSE
+#ifdef DEBUG_HW_ENABLED
+#define TRACE_HW_INIT TRUE
+#else
+#define TRACE_HW_INIT FALSE
 #endif
 
 #define UART_PIO_TX (8U)
 #define UART_PIO_RX (9U)
 #define UART_BAUD_RATE (115200U)
 
-#define HW_DBG(...) DBG_vPrintf(DEBUG_ENABLE, "[HW INIT] " __VA_ARGS__)
+#define HW_DBG(...) DBG_vPrintf(TRACE_HW_INIT, "[HW INIT] " __VA_ARGS__)
 
 static void CLOCKS_Init(void);
 extern void OSA_TimeInit(void);
@@ -54,14 +56,14 @@ void hardware_init(void) {
         HW_DBG("PWR_vColdStart done\n");
     }
 
-    SecLib_Init();
-    HW_DBG("SecLib_Init done\n");
     RNG_Init();
     HW_DBG("RNG_Init done\n");
-    TMR_Init();
-    HW_DBG("DBG_vPrintf done\n");
+    SecLib_Init();
+    HW_DBG("SecLib_Init done\n");
     MEM_Init();
     HW_DBG("MEM_Init done\n");
+    TMR_Init();
+    HW_DBG("TMR_Init done\n");
 
     APP_WWDT_Init();
     BUTTONS_HW_Init();

@@ -41,6 +41,4 @@ DeviceConfig_t device_config = {
     .u8BasicEndpoint = DEVBOARD_BASIC_ENDPOINT,
     .u8ZdoEndpoint = DEVBOARD_ZDO_ENDPOINT,
     .bIsJoined = FALSE,
-
-    .sDeviceBattery = {},
 };
