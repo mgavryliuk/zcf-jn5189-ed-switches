@@ -6,7 +6,7 @@
 #include "PDM.h"
 #include "PWR_Interface.h"
 #include "ZTimer.h"
-#include "app_battery.h"
+#include "app_adc.h"
 #include "app_buttons.h"
 #include "app_leds.h"
 #include "app_polling.h"
@@ -27,8 +27,10 @@ static void OnWakeUp(void);
 static void WakeCallBack(void);
 static void EnterMainLoop(void);
 static void vAttemptToSleep(void);
+static void APP_UpdateRadioTempAndPowerCluster(void* pvParam);
 
 extern void zps_taskZPS(void);
+extern void vRadio_Temp_Update(int16_t temperature_mult2);
 extern uint8_t mLPMFlag;
 
 static PWR_tsWakeTimerEvent sWake;
@@ -36,6 +38,7 @@ static bool_t bActivityScheduled = FALSE;
 static ZTIMER_tsTimer asTimers[ZTIMER_STORAGE];
 
 static uint8_t u8WakeCounter = 0;
+static uint8_t u8WakeUpTimerID;
 
 void vAppRegisterPWRCallbacks(void) {
     PWR_RegisterLowPowerEnterCallback(PreSleep);
@@ -54,6 +57,8 @@ void main_task(uint32_t parameter) {
     APP_MAIN_DBG("PDUM_vInit done.\n");
     ZTIMER_eInit(asTimers, sizeof(asTimers) / sizeof(ZTIMER_tsTimer));
     APP_MAIN_DBG("ZTIMER_eInit done with amount: %d.\n", ZTIMER_STORAGE);
+    ZTIMER_eOpen(&u8WakeUpTimerID, APP_UpdateRadioTempAndPowerCluster, NULL, ZTIMER_FLAG_PREVENT_SLEEP);
+
     POLL_Init();
     BUTTONS_SW_Init();
     LEDS_Timers_Init();
@@ -62,6 +67,8 @@ void main_task(uint32_t parameter) {
         .pfOnNWKSteeringStopCallback = LEDS_BlinkDuringNetworkSetup_Stop,
     };
     ZB_NODE_Init(&zbNodeCallbacks);
+    APP_UpdateRadioTempAndPowerCluster(NULL);
+
     ZTIMER_eStart(g_u8ButtonScanTimerID, 1);
     memset(&sWake, 0x0, sizeof(sWake));
     EnterMainLoop();
@@ -95,14 +102,11 @@ static void OnWakeUp(void) {
 }
 
 static void WakeCallBack(void) {
-    APP_MAIN_DBG("Wake callback called: %d\n", u8WakeCounter);
+    APP_MAIN_DBG("Wake up callback triggered\n");
     bActivityScheduled = FALSE;
-    if (device_config.bIsJoined) {
-        if (u8WakeCounter == 0) {
-            APP_MAIN_DBG("Updating battery status\n");
-            BATTERY_UpdateStatus();
-        }
-        u8WakeCounter = (u8WakeCounter + 1) % BATTERY_REPORT_EVERY_X_WAKEUPS;
+    u8WakeCounter = (u8WakeCounter + 1) % MEASURE_BATTERY_AND_TEMPERATURE_EVERY_X_WAKEUPS;
+    if (u8WakeCounter == 0) {
+        ZTIMER_eStart(u8WakeUpTimerID, 10);
     }
 }
 
@@ -153,5 +157,19 @@ static void EnterMainLoop(void) {
         WWDT_Refresh(WWDT);
         vAttemptToSleep();
         PWR_EnterLowPower();
+    }
+}
+
+static void APP_UpdateRadioTempAndPowerCluster(void* pvParam) {
+    APP_ADC_PerformMeasurements();
+
+    APP_MAIN_DBG("Updating battery status in power cluster\n");
+    APP_ADC_VBatMeasurement_t vbat_measurement = APP_ADC_GetVbatMeasurement();
+    ZB_NODE_UpdatePowerClusterBatteryStatus(vbat_measurement.voltage_mV, vbat_measurement.percentage);
+
+    APP_ADC_TempMeasurement_t temp_measurement = APP_ADC_GetTempMeasurement();
+    if (temp_measurement.is_valid) {
+        APP_MAIN_DBG("Updating radio temperature\n");
+        vRadio_Temp_Update(temp_measurement.calibrated_mult2);
     }
 }

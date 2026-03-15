@@ -36,5 +36,6 @@ extern tszQueue zps_TimeEvents;
 
 void ZB_NODE_Init(const ZBNodeCallbacks_t* callbacks);
 void ZB_NODE_OnResetCallback(void);
+void ZB_NODE_UpdatePowerClusterBatteryStatus(uint16_t voltage_mV, uint16_t battery_percent);
 
 #endif /* APP_NODE_H */

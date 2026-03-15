@@ -41,6 +41,4 @@ DeviceConfig_t device_config = {
     .u8BasicEndpoint = WXKG15LM_BASIC_ENDPOINT,
     .u8ZdoEndpoint = WXKG15LM_ZDO_ENDPOINT,
     .bIsJoined = FALSE,
-
-    .sDeviceBattery = {},
 };

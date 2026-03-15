@@ -286,7 +286,7 @@ set(LDLIBS
 
 set(APP_SRC
     ${APP_TARGET}/device_config.c
-    common/app_battery.c
+    common/app_adc.c
     common/app_buttons.c
     common/app_common.c
     common/app_leds.c
@@ -313,8 +313,8 @@ add_executable(${APP_TARGET} ${APP_SRC})
 target_compile_definitions(${APP_TARGET} PRIVATE
     # DEBUG_APP_ENABLED
     # DEBUG_APP_WWDT
+    # DEBUG_HW_ENABLED
     # DEBUG_APP_MAIN
-    # DEBUG_APP_BATTERY
     # DEBUG_BASIC_EP
     # DEBUG_CONFIGURATION_CLUSTER
     # DEBUG_ON_OFF_EP
@@ -325,6 +325,7 @@ target_compile_definitions(${APP_TARGET} PRIVATE
     # DEBUG_ZCL_TICK
     # DEBUG_COMMON
     # DEBUG_RADIO_CALIBRATIONS
+    # DEBUG_APP_ADC
 )
 
 target_link_libraries(${APP_TARGET}
@@ -343,4 +344,5 @@ add_custom_target(${APP_TARGET}.bin ALL
     COMMAND uv run --directory ${VENV_DIR} ${DK6_IMAGE_TOOL} -s 294912 -b 0 ${CMAKE_CURRENT_BINARY_DIR}/${APP_TARGET}.axf
     COMMAND ${CMAKE_COMMAND} -E echo "Generating binary ..."
     COMMAND ${CMAKE_OBJCOPY} -v -O binary ${APP_TARGET}.axf ${APP_TARGET}.bin
+    COMMAND cp ${APP_TARGET}.bin ${PROJECT_SOURCE_DIR}/firmwares/${APP_TARGET}/${BUILD_NUMBER}_${BUILD_DATE}_${APP_TARGET}.bin
 )

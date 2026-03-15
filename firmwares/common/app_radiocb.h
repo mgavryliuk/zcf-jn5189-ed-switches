@@ -19,6 +19,6 @@ start will be 55.6ms longer because the radio driver will have to perform a full
 */
 
 bool_t bRadioCB_WriteNVM(uint8* pu8DataBlock, uint16 u16DataLength);
-void APP_vRadioTempUpdate(bool_t bLoadCalibration);
+uint16 u16RadioCB_ReadNVM(uint8* pu8DataBlock, uint16 u16DataLength);
 
 #endif /* APP_RADIO_CALIBRATIONS_H */

@@ -4,7 +4,6 @@
 #include "MicroSpecific.h"
 #include "PDM.h"
 #include "app_basic_ep.h"
-#include "app_battery.h"
 #include "app_on_off_ep.h"
 #include "app_polling.h"
 #include "app_reporting.h"
@@ -88,7 +87,6 @@ void APP_vBdbCallback(BDB_tsBdbEvent* psBdbEvent) {
         case BDB_EVENT_REJOIN_SUCCESS:
             ZB_NODE_DBG("BDB_EVENT_REJOIN_SUCCESS\n");
             device_config.bIsJoined = TRUE;
-            BATTERY_UpdateStatus();
             POLL_Start(&POLL_FAST_CONFIG);
             break;
 
@@ -100,7 +98,6 @@ void APP_vBdbCallback(BDB_tsBdbEvent* psBdbEvent) {
             if (ZBNodeCallbacks.pfOnNWKSteeringStopCallback) {
                 ZBNodeCallbacks.pfOnNWKSteeringStopCallback();
             }
-            BATTERY_UpdateStatus();
             break;
 
         case BDB_EVENT_APP_START_POLLING:
@@ -142,6 +139,18 @@ void ZB_NODE_OnResetCallback(void) {
             ZBNodeCallbacks.pfOnNWKSteeringStartCallback(NULL);
         }
     }
+}
+
+void ZB_NODE_UpdatePowerClusterBatteryStatus(uint16_t voltage_mV, uint16_t battery_percentage) {
+    tsZCL_ClusterInstance* psZCL_ClusterInstance;
+    teZCL_Status eStatus =
+        eZCL_SearchForClusterEntry(device_config.u8BasicEndpoint, GENERAL_CLUSTER_ID_POWER_CONFIGURATION, TRUE, &psZCL_ClusterInstance);
+    ZB_NODE_DBG("Search for cluster entry %d in endpoint %d status: %d\n", GENERAL_CLUSTER_ID_POWER_CONFIGURATION,
+                device_config.u8BasicEndpoint, eStatus);
+    ZB_NODE_DBG("Updating  cluster with Voltage (mV): %u (%d%%)\n", voltage_mV, battery_percentage);
+    ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryVoltage = (uint8)(voltage_mV / 100);
+    ((tsCLD_PowerConfiguration*)psZCL_ClusterInstance->pvEndPointSharedStructPtr)->u8BatteryPercentageRemaining = battery_percentage * 2;
+    ZB_NODE_DBG("PowerConfiguration cluster sucessfully updated!\n");
 }
 
 static void ZB_NODE_InitQueues(void) {
