@@ -21,7 +21,7 @@ jobs:
             device_name: "Wireless remote switch H1 (double rocker)"
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Prepare environment
       - name: Install dependencies
@@ -60,7 +60,7 @@ jobs:
 
       - name: Set BUILD_DATE
         run: echo "BUILD_DATE=$(date -u +%Y%m%d)" >> $GITHUB_ENV
-      - name: Build firmware – ${{ matrix.device_name }}
+      - name: Build firmware - ${{ matrix.device_name }}
         run: |
           cmake -S . -B build --preset ${{ matrix.preset }} \
             -DBUILD_DATE=${BUILD_DATE} \
@@ -68,7 +68,7 @@ jobs:
           cmake --build build
       # Upload artifacts to the action
       - name: Upload firmware artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: firmware-${{ matrix.device_name }} (${{ matrix.preset }})
           path: |
@@ -82,9 +82,9 @@ jobs:
     if: github.event_name == 'release'
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Download release artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           path: ./firmwares
       - name: Publish built binaries to GitHub release
