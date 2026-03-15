@@ -105,7 +105,10 @@ static void BUTTONS_ScanCallback(void* pvParam) {
 
 static void BUTTONS_GINTCallback(void) {
     GINT_DisableCallback(GINT0);
-    ZTIMER_eStart(g_u8ButtonScanTimerID, 1);
+    if (ZTIMER_eStart(g_u8ButtonScanTimerID, 1) != E_ZTIMER_OK) {
+        BUTTON_DBG("Failed to start button scan timer. Enabling GINT callback\n");
+        GINT_EnableCallback(GINT0);
+    }
 }
 
 static void BUTTONS_ResetState(ButtonState_t* buttonState) {

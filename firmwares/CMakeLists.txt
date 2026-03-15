@@ -312,9 +312,9 @@ add_executable(${APP_TARGET} ${APP_SRC})
 
 target_compile_definitions(${APP_TARGET} PRIVATE
     # DEBUG_APP_ENABLED
+    # DEBUG_APP_MAIN
     # DEBUG_APP_WWDT
     # DEBUG_HW_ENABLED
-    # DEBUG_APP_MAIN
     # DEBUG_BASIC_EP
     # DEBUG_CONFIGURATION_CLUSTER
     # DEBUG_ON_OFF_EP
