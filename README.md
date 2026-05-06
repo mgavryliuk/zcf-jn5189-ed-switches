@@ -2,7 +2,7 @@
 - [Getting Started](#getting-started)
 - [Devices](#devices)
 - [Flashing](#flashing)
-- [Pairing after flashing](pairing-after-flashing)
+- [Pairing after flashing](#pairing-after-flashing)
 - [JN5189 Documentation](#jn5189-documentation)
 
 # Overview
