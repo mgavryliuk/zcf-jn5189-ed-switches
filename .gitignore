@@ -6,3 +6,5 @@ build
 .vscode
 compile_commands.json
 firmwares/**/*.bin
+
+.devcontainer/devcontainer-lock.json
